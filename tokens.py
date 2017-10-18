@@ -12,12 +12,13 @@ import glob
 import difflib
 import hashlib
 import io
+import pickle
 from PIL import Image
 
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-imglib = '~/nobackup/perso/vamp/charSheet/maptool/imglib'
+imglib = '../imglib'
 
 md5Template = '''<net.rptools.maptool.model.Asset>
   <id>
@@ -40,7 +41,6 @@ def fetch(category):
 	for item in items['results']:
 		log.info("fetching %s" % item['name'])
 		slist.append(requests.get(item['url']).json())
-		break # XXX remove
 	return slist
 
 class Macro(object):
@@ -76,8 +76,10 @@ sentinel = object()
 class Token(object):
 	def __init__(self, js):
 		self.js = js
-		self._guid = None
+		# for cached properties
+		self._guid = sentinel
 		self._img = sentinel
+		self._md5 = sentinel
 
 	def __str__(self): 
 		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s>' % (self.name, [
@@ -94,9 +96,15 @@ class Token(object):
 		return v
 
 	@property
+	def name(self):
+		# required otherwise this would later be misinterpreted for a path separator
+		return self.js['name'].replace('/', '_')
+
+	@property
 	def guid(self):
 		return ''
-		self._guid = self._guid or guid()
+		if self._guid is sentinel:
+			self._guid = self._guid or guid()
 		return self._guid
 
 	@property
@@ -133,7 +141,7 @@ class Token(object):
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
 		# using a stupid heuristic: the image / token.name match ratio
-		if self._img is sentinel:
+		if self._img is sentinel: # cache to property
 			# compute the diff ratio for the given name compared to the token name
 			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
 			# morph "/abc/def/anyfile.png" into "anyfile"
@@ -149,37 +157,57 @@ class Token(object):
 				log.info("Found a suitable image %s" % bfpath)
 				self._img = Image.open(bfpath, 'r') 
 			else: 
-				log.info("No suitable image found for the token, using the brown bear")
+				log.info("No suitable image found for the token, using the default image")
 				self._img = Image.open('dft.png', 'r')
 		return self._img
 
+	@property
+	def md5(self):
+		if self._md5 is sentinel: # cache this expensive property
+			out = io.BytesIO()
+			self.img.save(out, format='png')
+			self._md5 = hashlib.md5(out.getvalue()).hexdigest()
+		return self._md5
+	
 	def zipme(self):
 		"""Zip the token into a rptok file."""
 		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%self.name), 'w') as zipme:
 			zipme.writestr('content.xml', self.content_xml)
 			zipme.writestr('properties.xml', self.properties_xml)
-			out = io.BytesIO()
-			self.img.save(out, format='png')
-			md5 = hashlib.md5(out.getvalue()).hexdigest()
-			log.debug('Token image md5 %s' % md5)
+			log.debug('Token image md5 %s' % self.md5)
 			# default image for the token, right now it's a brown bear
 			# zip the xml file named with the md5 containing the asset properties
-			zipme.writestr('assets/%s' % md5, jinja2.Template(md5Template).render(name=self.name, extension='png', md5=md5))
+			zipme.writestr('assets/%s' % self.md5, jinja2.Template(md5Template).render(name=self.name, extension='png', md5=self.md5))
 			# zip the img itself
-			zipme.writestr('assets/%s.png' % md5, out.getvalue())
+			out = io.BytesIO() ; self.img.save(out, format='PNG')
+			zipme.writestr('assets/%s.png' % self.md5, out.getvalue())
 			# build thumbnails
 			out = io.BytesIO()
-			im = self.img.copy() ; im.thumbnail((50,50)) ; out.seek(0); im.save(out, format='PNG')
+			im = self.img.copy() ; im.thumbnail((50,50)) ; im.save(out, format='PNG')
 			zipme.writestr('thumbnail', out.getvalue())
 			out = io.BytesIO()
-			im = self.img.copy() ; im.thumbnail((500,500)) ; out.seek(0); im.save(out, format='PNG')
+			im = self.img.copy() ; im.thumbnail((500,500)) ; im.save(out, format='PNG')
 			zipme.writestr('thumbnail_large', out.getvalue())
 
 def main():
-	for category in ['monsters',]:
-		for token in (Token(item) for item in fetch(category)):
-			log.info(token)
-			token.zipme()
+	tokens = []
+	if not os.path.exists('build'): os.makedirs('build')
+	pfile = os.path.join('build', 'tokens.pickle')
+
+	# does not work yet
+	# if os.path.exists(pfile):
+		# with open(pfile, 'r') as fpickle:
+			# tokens = pickle.load(fpickle)
+
+	if not tokens:
+		# fetch token using dnd5api on the net
+		for category in ['monsters',]:
+			tokens.extend([Token(item) for item in fetch(category)])
+		with open(pfile, 'w') as fpickle:
+			pickle.Pickler(fpickle).dump(tokens)
+	for token in tokens:
+		log.info(token)
+		token.zipme()
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)

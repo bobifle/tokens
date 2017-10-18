@@ -10,7 +10,7 @@
     <entry>
       <null/>
       <net.rptools.lib.MD5Key>
-        <id>c8b5741104c425585b6b374e214612e7</id>
+        <id>{{token.md5}}</id>
       </net.rptools.lib.MD5Key>
     </entry>
   </imageAssetMap>
