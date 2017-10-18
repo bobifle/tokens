@@ -148,11 +148,13 @@ class Token(object):
 			short_name = lambda full_path: os.path.splitext(os.path.basename(full_path))[0]
 			# list of all img files
 			files = glob.glob(os.path.join(os.path.expanduser(imglib), '*.png'))
-			# generate the diff ratios
-			ratios = ((f, ratio(short_name(f))) for f in files)
-			# pickup the best match, it's a tuple (fpath, ratio)
-			bfpath, bratio = max(ratios, key = lambda i: i[1])
-			log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
+			bratio=0
+			if files:
+				# generate the diff ratios
+				ratios = ((f, ratio(short_name(f))) for f in files)
+				# pickup the best match, it's a tuple (fpath, ratio)
+				bfpath, bratio = max(ratios, key = lambda i: i[1])
+				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
 			if bratio > 0.8:
 				log.info("Found a suitable image %s" % bfpath)
 				self._img = Image.open(bfpath, 'r') 
