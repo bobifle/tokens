@@ -13,7 +13,12 @@ import difflib
 import hashlib
 import io
 import pickle
+import argparse
+import itertools
 from PIL import Image
+
+# local import
+import macros
 
 log = logging.getLogger()
 
@@ -29,64 +34,42 @@ md5Template = '''<net.rptools.maptool.model.Asset>
   <image/>
 </net.rptools.maptool.model.Asset>'''
 
+args = None
 
 def guid(): 
 	return base64.urlsafe_b64encode(uuid.uuid4().bytes)
 
-def fetch(category):
+def dnd5Api(category):
 	"""Fetch all category items from the dnd database"""
 	items = requests.post(ubase+category+'/').json()
 	log.info("Found %s %s" % (items['count'], category))
-	slist = []
 	for item in items['results']:
 		log.info("fetching %s" % item['name'])
-		slist.append(requests.get(item['url']).json())
-	return slist
-
-class Macro(object):
-	def __init__(self, label, command):
-		self._command = command
-		self._label = label
-
-	@property
-	def command(self): return self._command
-
-	@property
-	def label(self): return self._label
-
-	@property
-	def group(self): return 'Health' # TODO handler more than one group
-
-	@property
-	def color(self): return {'Health' : 'green'}[self.group]
-
-common = [
-	Macro('Potion of Healing', '''[h:Flavor=token.name+" FLAVOR TEXT HERE"]
-
-[h:FlavorData = json.set("",
-	"Flavor",Flavor,
-	"ParentToken",currentToken())]
-
-[macro("Potion of Healing@Lib:Melek") : FlavorData]'''
-	)
-]
-
-sentinel = object()
+		yield requests.get(item['url']).json()
 
 class Token(object):
+	sentinel = object()
 	def __init__(self, js):
 		self.js = js
 		# for cached properties
-		self._guid = sentinel
-		self._img = sentinel
-		self._md5 = sentinel
+		self._guid = self.sentinel
+		self._img = self.sentinel
+		self._md5 = self.sentinel
 
 	def __str__(self): 
-		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s>' % (self.name, [
+		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s,img=%s>' % (self.name, [
 			self.strength, self.dexterity, self.constitution, 
 			self.intelligence, self.wisdom, self.charisma
 			], self.hit_points, self.roll_max_hp, self.armor_class,
-			self.challenge_rating)
+			self.challenge_rating, self.img_name)
+
+	# The 2 following methods are use by pickle to serialize a token
+	def __getstate__(self): return {'js' : self.js}
+	def __setstate__(self, state): 
+		self.js = state['js']
+		self._guid = self.sentinel
+		self._img = self.sentinel
+		self._md5 = self.sentinel
 
 	# called when an attribute is not found in the Token instance
 	# automatically search for its related item in the json data
@@ -103,7 +86,7 @@ class Token(object):
 	@property
 	def guid(self):
 		return ''
-		if self._guid is sentinel:
+		if self._guid is self.sentinel:
 			self._guid = self._guid or guid()
 		return self._guid
 
@@ -135,13 +118,19 @@ class Token(object):
 		return hd
 
 	@property
-	def macros(self): return common # TODO add more macros
+	def macros(self): 
+		# get optinal macros related to the token actions
+		if 'actions' in self.js:
+			actions = (macros.getAction(self, action) for action in self.actions)
+		else: # XXX some monster like the frog has no 'actions' field
+			actions=[]
+		return itertools.chain((m for m in actions if m is not None), macros.commons(self))
 
 	@property
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
 		# using a stupid heuristic: the image / token.name match ratio
-		if self._img is sentinel: # cache to property
+		if self._img is self.sentinel: # cache to property
 			# compute the diff ratio for the given name compared to the token name
 			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
 			# morph "/abc/def/anyfile.png" into "anyfile"
@@ -156,16 +145,17 @@ class Token(object):
 				bfpath, bratio = max(ratios, key = lambda i: i[1])
 				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
 			if bratio > 0.8:
-				log.info("Found a suitable image %s" % bfpath)
 				self._img = Image.open(bfpath, 'r') 
 			else: 
-				log.info("No suitable image found for the token, using the default image")
 				self._img = Image.open('dft.png', 'r')
 		return self._img
 
 	@property
+	def img_name(self): return os.path.splitext(os.path.basename(self.img.filename))[0]
+
+	@property
 	def md5(self):
-		if self._md5 is sentinel: # cache this expensive property
+		if self._md5 is self.sentinel: # cache this expensive property
 			out = io.BytesIO()
 			self.img.save(out, format='png')
 			self._md5 = hashlib.md5(out.getvalue()).hexdigest()
@@ -174,7 +164,7 @@ class Token(object):
 	def zipme(self):
 		"""Zip the token into a rptok file."""
 		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%self.name), 'w') as zipme:
-			zipme.writestr('content.xml', self.content_xml)
+			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
 			zipme.writestr('properties.xml', self.properties_xml)
 			log.debug('Token image md5 %s' % self.md5)
 			# default image for the token, right now it's a brown bear
@@ -192,24 +182,34 @@ class Token(object):
 			zipme.writestr('thumbnail_large', out.getvalue())
 
 def main():
-	tokens = []
+	parser = argparse.ArgumentParser(description='Process some integers.')
+	parser.add_argument('--verbose', '-v', action='count')
+	parser.add_argument('--max-token', '-m', type=int)
+	global args
+	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
 	pfile = os.path.join('build', 'tokens.pickle')
 
-	# does not work yet
-	# if os.path.exists(pfile):
-		# with open(pfile, 'r') as fpickle:
-			# tokens = pickle.load(fpickle)
-
-	if not tokens:
+	if os.path.exists(pfile):
+		log.warning('Found serialized Tokens, delete %s to refresh the tokens from %s' % (pfile, ubase))
+		with open(pfile, 'r') as fpickle:
+			tokens = pickle.load(fpickle)
+	else:
 		# fetch token using dnd5api on the net
 		for category in ['monsters',]:
-			tokens.extend([Token(item) for item in fetch(category)])
-		with open(pfile, 'w') as fpickle:
-			pickle.Pickler(fpickle).dump(tokens)
-	for token in tokens:
+			tokens = (Token(item) for item in dnd5Api(category))
+
+	sTokens = [] # used for further serialization
+	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
+		log.info('macros :%s' % list(token.macros))
 		token.zipme()
+		sTokens.append(token)
+	
+	# serialize the data if not already done
+	if not os.path.exists(pfile):
+		with open(pfile, 'w') as fpickle:
+			pickle.Pickler(fpickle).dump(sTokens)
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)
