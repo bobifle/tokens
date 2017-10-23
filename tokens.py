@@ -24,7 +24,10 @@ import macros
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-imglib = '../imglib'
+imglibs = [
+  '../imglib',
+  r'C:\sources\dnd5\Monster Manual Roll20 Tokens',
+]
 
 md5Template = '''<net.rptools.maptool.model.Asset>
   <id>
@@ -196,7 +199,7 @@ class Token(object):
 			# morph "/abc/def/anyfile.png" into "anyfile"
 			short_name = lambda full_path: os.path.splitext(os.path.basename(full_path))[0]
 			# list of all img files
-			files = glob.glob(os.path.join(os.path.expanduser(imglib), '*.png'))
+			files = itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs))
 			bratio=0
 			if files:
 				# generate the diff ratios

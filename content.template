@@ -41,7 +41,7 @@
   <isFlippedX>false</isFlippedX>
   <isFlippedY>false</isFlippedY>
   <sightType>Normal</sightType>
-  <hasSight>true</hasSight>
+  <hasSight>false</hasSight>
   <state>
 	{%- for state in token.states %}
     <entry>
