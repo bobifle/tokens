@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import requests
 import logging
 import base64
@@ -46,6 +47,27 @@ def dnd5Api(category):
 	for item in items['results']:
 		log.info("fetching %s" % item['name'])
 		yield requests.get(item['url']).json()
+	
+class State(object):
+	def __init__(self, name, value):
+		self.name = name
+		self.value = value
+
+class Prop(object):
+	def __init__(self, name, value):
+		self.name = name
+		self.value = value
+	def __repr__(self): return '%s<%s,%s>' % (self.__class__.__name__, self.name, self.value)
+	def render(self):
+		return jinja2.Template('''      <entry>
+        <string>{{prop.name.lower()}}</string>
+        <net.rptools.CaseInsensitiveHashMap_-KeyValue>
+          <key>{{prop.name}}</key>
+          <value class="string">{{prop.value}}</value>
+          <outer-class reference="../../../.."/>
+        </net.rptools.CaseInsensitiveHashMap_-KeyValue>
+      </entry>''').render(prop=self)
+
 
 class Token(object):
 	sentinel = object()
@@ -118,13 +140,51 @@ class Token(object):
 		return hd
 
 	@property
+	def actions(self): return self.js.get('actions', [])
+
+	@property
+	def specials(self): return self.js.get('special_abilities', [])
+
+	@property
+	def legends(self): return self.js.get('legendary_actions', [])
+
+	@property
+	def note(self): return ''
+
+	@property
+	def immunities(self): return json.dumps(self.damage_immunities.split())
+
+	@property
+	def resistances(self): return json.dumps(self.damage_resistances.split())
+
+	@property
 	def macros(self): 
 		# get optinal macros related to the token actions
-		if 'actions' in self.js:
-			actions = (macros.getAction(self, action) for action in self.actions)
-		else: # XXX some monster like the frog has no 'actions' field
-			actions=[]
-		return itertools.chain((m for m in actions if m is not None), macros.commons(self))
+		actions = (macros.ActionMacro(self, action) for action in self.actions)
+		specials= (macros.SpecialMacro(self, spe) for spe in self.specials)
+		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
+		return itertools.chain(actions, specials, legends, macros.commons(self))
+
+	@property
+	def props(self):
+		return (Prop(name, value) for name, value in [
+			('AC', self.armor_class),
+			('MaxHp', self.hit_points),
+			('Hp', self.hit_points),
+			('HitDice', self.hit_dice),
+			('Charisma', self.charisma),
+			('Strength', self.strength),
+			('Dexterity', self.dexterity),
+			('Intelligence', self.intelligence),
+			('Wisdom', self.wisdom),
+			('Constitution', self.constitution),
+			('Constitution', self.constitution),
+			('Immunity', self.immunities), # XXX add condition immunities ?
+			('Resistance', self.resistances),
+			('CreatureType', self.type + ', CR ' + str(self.challenge_rating)),
+			('Alignment', self.alignment),
+			('Speed', self.speed),
+			])
 
 	@property
 	def img(self):
@@ -160,6 +220,9 @@ class Token(object):
 			self.img.save(out, format='png')
 			self._md5 = hashlib.md5(out.getvalue()).hexdigest()
 		return self._md5
+
+	@property
+	def states(self): return (s for s in [State('Concentrating', 'false')])
 	
 	def zipme(self):
 		"""Zip the token into a rptok file."""
@@ -202,7 +265,6 @@ def main():
 	sTokens = [] # used for further serialization
 	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
-		log.info('macros :%s' % list(token.macros))
 		token.zipme()
 		sTokens.append(token)
 	
