@@ -161,6 +161,18 @@ class Token(object):
 	def resistances(self): return json.dumps(self.damage_resistances.split())
 
 	@property
+	def size_guid(self):
+		# XXX may depend on the maptool version
+		return {
+			'tiny':       'fwABAc5lFSoDAAAAKgABAA==',
+			'small':      'fwABAc5lFSoEAAAAKgABAA==',
+			'medium':     'fwABAc9lFSoFAAAAKgABAQ==',
+			'large':      'fwABAdBlFSoGAAAAKgABAA==',
+			'huge':       'fwABAdBlFSoHAAAAKgABAA==',
+			'gargantuan': 'fwABAdFlFSoIAAAAKgABAQ==',
+		}[self.size.lower()]
+
+	@property
 	def macros(self): 
 		# get optinal macros related to the token actions
 		actions = (macros.ActionMacro(self, action) for action in self.actions)

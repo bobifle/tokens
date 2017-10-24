@@ -42,6 +42,14 @@
   <isFlippedY>false</isFlippedY>
   <sightType>Normal</sightType>
   <hasSight>false</hasSight>
+  <sizeMap>
+    <entry>
+      <java-class>net.rptools.maptool.model.SquareGrid</java-class>
+      <net.rptools.maptool.model.GUID>
+        <baGUID>{{token.size_guid}}</baGUID>
+      </net.rptools.maptool.model.GUID>
+    </entry>
+  </sizeMap>
   <state>
 	{%- for state in token.states %}
     <entry>
