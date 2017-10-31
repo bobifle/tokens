@@ -1,0 +1,33 @@
+[dialog("Details"): {
+<html>
+ <head>
+  <link rel='stylesheet' type='text/css' href='myCSS@Lib:CharacterSheet'></link>
+  <title>{{spell.name}} Details</title>
+ </head>
+ <body>
+  <table id="stats">
+   <tr class="oddRow">
+    <td>School</td>
+    <td>{{spell.school['name']}}</td>
+    <td class="sepl">range</td>
+    <td>{{spell.range}}</td>
+   </tr>
+   <tr class="evenRow">
+    <td>Duration</td>
+    <td>{{spell.duration}}</td>
+    <td class="sepl">Components</td>
+    <td>{{spell.comp}}</td>
+   </tr>
+   <tr class="oddRow">
+    <td>Casting Time</td>
+    <td>{{spell.casting_time}}</td>
+    <td class="sepl">Concentration/ritual</td>
+    <td>{{spell.concentration}}/{{spell.ritual}}</td>
+   </tr>
+  </table>
+  {%- for d in spell.js['desc'] %}
+  <p>{{d}}</p>
+  {%- endfor %}
+ </body>
+</html>
+}]

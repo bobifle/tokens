@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import json
 import requests
 import logging
@@ -71,30 +72,32 @@ class Prop(object):
         </net.rptools.CaseInsensitiveHashMap_-KeyValue>
       </entry>''').render(prop=self)
 
+class Dnd5ApiObject(object):
+	sfile_name = 'nofile.pickle' # filename used for serialization
+	category = 'unknown'
 
-class Token(object):
-	sentinel = object()
+	@classmethod
+	def load(cls, build_dir):
+		items = None
+		fp = os.path.join(build_dir, cls.sfile_name)
+		if os.path.exists(fp):
+			log.warning('Found serialized %ss, delete %s to refresh the items from %s' % (cls.__name__, fp, ubase))
+			with open(fp, 'r') as fpickle:
+				items = pickle.load(fpickle)
+		return iter(items) if items else (cls(item) for item in dnd5Api(cls.category))
+
+	@classmethod
+	def dump(cls, build_dir, items):
+		# serialize the data if not already done
+		fp = os.path.join(build_dir, cls.sfile_name)
+		if not os.path.exists(fp):
+			with open(fp, 'w') as fpickle:
+				pickle.Pickler(fpickle).dump(list(items))
+
 	def __init__(self, js):
 		self.js = js
-		# for cached properties
-		self._guid = self.sentinel
-		self._img = self.sentinel
-		self._md5 = self.sentinel
 
-	def __str__(self): 
-		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s,img=%s>' % (self.name, [
-			self.strength, self.dexterity, self.constitution, 
-			self.intelligence, self.wisdom, self.charisma
-			], self.hit_points, self.roll_max_hp, self.armor_class,
-			self.challenge_rating, self.img_name)
-
-	# The 2 following methods are use by pickle to serialize a token
-	def __getstate__(self): return {'js' : self.js}
-	def __setstate__(self, state): 
-		self.js = state['js']
-		self._guid = self.sentinel
-		self._img = self.sentinel
-		self._md5 = self.sentinel
+	def __repr__(self): return '%s<name=%s>' % (self.__class__.__name__, self.name)
 
 	# called when an attribute is not found in the Token instance
 	# automatically search for its related item in the json data
@@ -107,6 +110,46 @@ class Token(object):
 	def name(self):
 		# required otherwise this would later be misinterpreted for a path separator
 		return self.js['name'].replace('/', '_')
+
+	# The 2 following methods are use by pickle to serialize objects
+	def __getstate__(self): return {'js' : self.js}
+	def __setstate__(self, state): self.js = state['js']
+
+class Spell(Dnd5ApiObject):
+	sfile_name = 'spells.pickle' 
+	category = 'spells'
+	spellDB = []
+
+	@property
+	def desc(self): return '\n'.join(self.js['desc'])
+
+	@property
+	def comp(self): return ', '.join(self.js['components'])
+
+class Token(Dnd5ApiObject):
+	sentinel = object()
+	sfile_name = 'tokens.pickle' 
+	category = 'monsters'
+	def __init__(self, js):
+		self.js = js
+		# for cached properties
+		self._guid = self.sentinel
+		self._img = self.sentinel
+		self._md5 = self.sentinel
+
+	def __repr__(self): 
+		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s,img=%s>' % (self.name, [
+			self.strength, self.dexterity, self.constitution, 
+			self.intelligence, self.wisdom, self.charisma
+			], self.hit_points, self.roll_max_hp, self.armor_class,
+			self.challenge_rating, self.img_name)
+
+	# The 2 following methods are use by pickle to serialize a token
+	def __setstate__(self, state): 
+		Dnd5ApiObject.__setstate__(self, state)
+		self._guid = self.sentinel
+		self._img = self.sentinel
+		self._md5 = self.sentinel
 
 	@property
 	def guid(self):
@@ -141,6 +184,24 @@ class Token(object):
 		hd = {'1d12':0, '1d10':0, '1d8':0, '1d6':0}
 		hd.update({'1d%s'%value:dice})
 		return hd
+
+	# spellcasting 
+	@property
+	def sc(self): return next((spe for spe in self.specials if spe['name'] == 'Spellcasting'), None)
+
+	# wisdom, charisma ot intelligence
+	@property
+	def scAttributes(self):  # spellcasting attribute
+		desc = self.sc['desc'].lower() if self.sc else ''
+		attr = next((attr for attr in ['intelligence', 'charisma', 'wisdom'] if attr in desc), None)
+		match = re.search(r'save dc (\d+)', desc)
+		dc = match and int(match.group(1))
+		match = re.search(r'([+-]\d+) to hit with spell', desc)
+		attack = match and match.group(1)
+		return (attr, dc, attack) if desc else None
+
+	@property
+	def scDC(self): return 
 
 	@property
 	def actions(self): return self.js.get('actions', [])
@@ -178,7 +239,20 @@ class Token(object):
 		actions = (macros.ActionMacro(self, action) for action in self.actions)
 		specials= (macros.SpecialMacro(self, spe) for spe in self.specials)
 		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
-		return itertools.chain(actions, specials, legends, macros.commons(self))
+		attributes = self.scAttributes
+		groupName = 'Spells'
+		if attributes:
+			attr, dc, attack = attributes
+			groupName = 'Spells(%s) DC%s %s' % (attr[:3], dc, attack)
+		spells = (macros.SpellMacro(self, spell, groupName) for spell in self.spells)
+		return itertools.chain(actions, specials, legends, macros.commons(self), spells)
+
+	@property
+	def spells(self):
+		spells = []
+		for ability in (a for a in self.specials if a['name'] == 'Spellcasting'):
+			spells = [s for s in Spell.spellDB if s.name.lower() in ability['desc']]
+		return spells
 
 	@property
 	def props(self):
@@ -193,12 +267,16 @@ class Token(object):
 			('Intelligence', self.intelligence),
 			('Wisdom', self.wisdom),
 			('Constitution', self.constitution),
-			('Constitution', self.constitution),
 			('Immunity', self.immunities), # XXX add condition immunities ?
 			('Resistance', self.resistances),
 			('CreatureType', self.type + ', CR ' + str(self.challenge_rating)),
 			('Alignment', self.alignment),
 			('Speed', self.speed),
+			('Senses', self.senses),
+			('WisdomSave', self.wisdom_save),
+			('Languages', self.languages),
+			('Perception', self.perception),
+			('ImageName', self.img_name),
 			])
 
 	@property
@@ -266,27 +344,19 @@ def main():
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
-	pfile = os.path.join('build', 'tokens.pickle')
 
-	if os.path.exists(pfile):
-		log.warning('Found serialized Tokens, delete %s to refresh the tokens from %s' % (pfile, ubase))
-		with open(pfile, 'r') as fpickle:
-			tokens = pickle.load(fpickle)
-	else:
-		# fetch token using dnd5api on the net
-		for category in ['monsters',]:
-			tokens = (Token(item) for item in dnd5Api(category))
+	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
+	tokens = Token.load('build')
+	Spell.spellDB = list(Spell.load('build'))
 
-	sTokens = [] # used for further serialization
+	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
 		token.zipme()
 		sTokens.append(token)
 	
-	# serialize the data if not already done
-	if not os.path.exists(pfile):
-		with open(pfile, 'w') as fpickle:
-			pickle.Pickler(fpickle).dump(sTokens)
+	Token.dump('build', sTokens)
+	Spell.dump('build', Spell.spellDB)
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)

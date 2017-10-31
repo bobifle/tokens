@@ -8,6 +8,7 @@ import copy
 log = logging.getLogger(__name__)
 
 class Macro(object):
+
 	def __init__(self, token, action, label, command):
 		self._command = command
 		self._label = label
@@ -24,10 +25,10 @@ class Macro(object):
 	def label(self): return self._label
 
 	@property
-	def group(self): return 'unkown' 
+	def group(self): return 'unknown' 
 
 	@property
-	def color(self): return {'Health' : 'green', 'Action': 'black'}[self.group]
+	def color(self): return {'Health' : 'green', 'Action': 'black'}.get(self.group, 'black')
 
 class DescrMacro(Macro):
 	def __init__(self, token, action):
@@ -54,22 +55,23 @@ class SpecialMacro(DescrMacro):
 	@property
 	def color(self): return 'maroon'
 
-class HealthMacro(Macro):
-	def __init__(self, label, macro_name):
-		self.mname = macro_name
-		Macro.__init__(self, None, None, label, '''[h:Flavor=token.name+" FLAVOR TEXT HERE"]
+class SpellMacro(Macro):
+	def __init__(self, token, spell, groupName):
+		# XXX pass the spell as action ... probably a sign of bad design
+		self._group = groupName
+		with open('spell.template') as template:
+			 t = jinja2.Template(template.read())
+			 macro =  t.render(spell=spell)
 
+		Macro.__init__(self, token, spell.js, spell.name, macro)
+		self.action['description'] = '\n'.join(self.action['desc'])
 
-[h:FlavorData = json.set("",
-	"Flavor",Flavor,
-	"ParentToken",currentToken())]
-
-[macro("{{macro.mname}}") : FlavorData]''')
 	@property
-	def group(self): return 'Health'
+	def group(self): return self._group
+	@property
+	def color(self): return 'blue'
 
 common = [
-	HealthMacro('Change HP', 'Change HP@Lib:Melek'),
 ]
 
 def commons(token):
