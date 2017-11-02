@@ -9,7 +9,6 @@
    table { border: none; border-collapse: collapse; }
    .sepl { border-left: 1px solid #000; }
    </style>"]
-  <link rel='stylesheet' type='text/css' href='mySpell@[r: getMacroLocation()]'></link>
   <title>{{spell.name}} Details</title>
  </head>
  <body>

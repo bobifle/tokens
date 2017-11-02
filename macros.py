@@ -71,7 +71,22 @@ class SpellMacro(Macro):
 	@property
 	def color(self): return 'blue'
 
+
+class SheetMacro(Macro):
+	def __init__(self, token):
+		with open('token_sheet.template') as template:
+			 # t = jinja2.Template(template.read())
+			 # macro =  t.render(token=token)
+			Macro.__init__(self, None, None, 'Sheet', template.read())
+
+	@property
+	def group(self): return 'Sheet'
+	@property
+	def color(self): return 'black'
+
+
 common = [
+	SheetMacro(None)
 ]
 
 def commons(token):

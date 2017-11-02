@@ -60,7 +60,9 @@
   </state>
   <propertyMapCI>
     <store>
-	{% for prop in token.props %}{{prop.render()}}{% endfor%}
+	{%- for prop in token.props %}
+	{{prop.render()}}
+	{%- endfor%}
     </store>
   </propertyMapCI>
   <macroPropertiesMap>{%for macro in token.macros %}

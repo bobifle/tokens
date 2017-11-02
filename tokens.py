@@ -103,7 +103,9 @@ class Dnd5ApiObject(object):
 	# automatically search for its related item in the json data
 	def __getattr__(self, attr):
 		v = self.js.get(attr, None)
-		if v is None: raise AttributeError("Cannot find the attribute %s" % attr)
+		# XXX raising RuntimeError instead of AttributeError, because there's 
+		# a bad interraction between AttributeError and properties
+		if v is None: raise RuntimeError("Cannot find the attribute %s" % attr)
 		return v
 
 	@property
@@ -174,6 +176,12 @@ class Token(Dnd5ApiObject):
 	def bcon(self): return (self.constitution-10)/2
 
 	@property
+	def bdex(self): return (self.dexterity-10)/2
+
+	@property
+	def bwis(self): return (self.wisdom-10)/2
+
+	@property
 	def roll_max_hp(self): 
 		dice, value = map(int, self.hit_dice.split('d'))
 		return '%sd%s+%s' % (dice, value, dice*self.bcon)
@@ -213,13 +221,19 @@ class Token(Dnd5ApiObject):
 	def legends(self): return self.js.get('legendary_actions', [])
 
 	@property
+	def perception(self): return self.js.get('perception', 10+self.bdex)
+
+	@property
+	def wisdom_save(self): return self.js.get('wisdom_save', 10+self.bwis)
+
+	@property
 	def note(self): return ''
 
 	@property
-	def immunities(self): return json.dumps(self.damage_immunities.split())
+	def immunities(self): return json.dumps(self.js.get('damage_immunities', '').split())
 
 	@property
-	def resistances(self): return json.dumps(self.damage_resistances.split())
+	def resistances(self): return json.dumps(self.js.get('damage_resistances','').split())
 
 	@property
 	def size_guid(self):
