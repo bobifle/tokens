@@ -1,7 +1,15 @@
 [dialog("Details"): {
 <html>
  <head>
-  <link rel='stylesheet' type='text/css' href='myCSS@Lib:CharacterSheet'></link>
+ [r: "<style>
+   .oddRow { background-color: #FFFFF0 }
+   .evenRow { background-color: #EEEEAA }
+   #stats th { background-color: #113311; color: #FFFFFF }
+   body {background-color: #FFFFFF}
+   table { border: none; border-collapse: collapse; }
+   .sepl { border-left: 1px solid #000; }
+   </style>"]
+  <link rel='stylesheet' type='text/css' href='mySpell@[r: getMacroLocation()]'></link>
   <title>{{spell.name}} Details</title>
  </head>
  <body>
