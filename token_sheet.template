@@ -1,0 +1,64 @@
+[dialog("Token_Sheet"): {
+<html>
+ <head>
+ [r: "<style>
+ var XpropLine = document.registerElement('property-line');
+ stat-block { margin-left: 20px; margin-top: 20px; }
+ h1 { font-family: 'Libre Baskerville', 'Lora', 'Calisto MT',
+      'Bookman Old Style', Bookman, 'Goudy Old Style',
+      Garamond, 'Hoefler Text', 'Bitstream Charter',
+      Georgia, serif;
+      color: #7A200D;
+      font-weight: 700;
+      margin: 0px;
+      font-size: 23px;
+      letter-spacing: 1px;
+      font-variant: small-caps;
+    }
+	h2 {
+      font-weight: normal;
+      font-style: italic;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .property-line {
+      line-height: 1.4;
+      display: block;
+      text-indent: -1em;
+      padding-left: 1em;
+    }
+
+    property-line > h4 {
+      color: #7A200D;
+      margin: 0;
+      display: inline;
+      font-weight: bold;
+    }
+
+	.rule { height: 2px; background: #922610; position: relative; }
+   </style>"]
+  <title>{{macro.token.name}} Details</title>
+ </head>
+ <body>
+ <stat-block>
+    <creature-heading>
+      <h1>{{macro.token.name}}</h1>
+      <h2>{{macro.token.type}}</h2>
+    </creature-heading>
+	<div class="rule"></div>
+	<top-stats>
+      <div class="property-line">
+        <h4>Armor Class</h4>
+        <p>{getProperty("ac")}</p>
+      </div>
+      <property-line>
+        <h4>Hit Point</h4>
+        <p>{getProperty("hp")} {getProperty("hitdice")}</p>
+      </property-line>
+      <abilities-block data-cha="1" data-con="13" data-dex="11" data-int="1" data-str="14" data-wis="3"></abilities-block>
+   </top-stats>
+ </stat-block>
+ </body>
+</html>
+}]
