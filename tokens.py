@@ -41,6 +41,41 @@ md5Template = '''<net.rptools.maptool.model.Asset>
 
 args = None
 
+monsters = [
+	{
+		u'name': u'Aarakocra', 
+		u'size': u'Medium', 
+		u'type': u'humanoid', 
+		u'alignment': u'neutral good', 
+		u'armor_class': 12, 
+		u'hit_points': 13, 
+		u'hit_dice': u'3d8', 
+		u'speed': u'20 ft., fly 50 ft.', 
+		u'strength': 10, 
+		u'dexterity': 14,
+		u'constitution': 10, 
+		u'intelligence': 11,
+		u'wisdom_save': 12,
+		u'charisma': 11, 
+		u'perception': '+5', 
+		u'constitution_save': 0, 
+		u'intelligence_save': 0, 
+		u'actions': [{u'attack_bonus': 0, u'name': u'Multiattack', u'desc': u'The aboleth makes three tentacle attacks.'}, {u'damage_dice': u'2d6', u'damage_bonus': 5, u'attack_bonus': 9, u'name': u'Tentacle', u'desc': u"Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 12 (2d6 + 5) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Constitution saving throw or become diseased. The disease has no effect for 1 minute and can be removed by any magic that cures disease. After 1 minute, the diseased creature's skin becomes translucent and slimy, the creature can't regain hit points unless it is underwater, and the disease can be removed only by heal or another disease-curing spell of 6th level or higher. When the creature is outside a body of water, it takes 6 (1d12) acid damage every 10 minutes unless moisture is applied to the skin before 10 minutes have passed."}, {u'damage_dice': u'3d6', u'damage_bonus': 5, u'attack_bonus': 9, u'name': u'Tail', u'desc': u'Melee Weapon Attack: +9 to hit, reach 10 ft. one target. Hit: 15 (3d6 + 5) bludgeoning damage.'}, {u'attack_bonus': 0, u'name': u'Enslave (3/day)', u'desc': u"The aboleth targets one creature it can see within 30 ft. of it. The target must succeed on a DC 14 Wisdom saving throw or be magically charmed by the aboleth until the aboleth dies or until it is on a different plane of existence from the target. The charmed target is under the aboleth's control and can't take reactions, and the aboleth and the target can communicate telepathically with each other over any distance.\nWhenever the charmed target takes damage, the target can repeat the saving throw. On a success, the effect ends. No more than once every 24 hours, the target can also repeat the saving throw when it is at least 1 mile away from the aboleth."}], 
+		u'damage_resistances': u'', 
+		u'languages': 
+		u'Deep Speech, telepathy 120 ft.',
+		u'damage_vulnerabilities': u'',
+		u'senses': u'darkvision 120 ft., passive Perception 20',
+		u'wisdom': 15, 
+		u'special_abilities': [{u'attack_bonus': 0, u'name': u'Amphibious', u'desc': u'The aboleth can breathe air and water.'}, {u'attack_bonus': 0, u'name': u'Mucous Cloud', u'desc': u'While underwater, the aboleth is surrounded by transformative mucus. A creature that touches the aboleth or that hits it with a melee attack while within 5 ft. of it must make a DC 14 Constitution saving throw. On a failure, the creature is diseased for 1d4 hours. The diseased creature can breathe only underwater.'}, {u'attack_bonus': 0, u'name': u'Probing Telepathy', u'desc': u"If a creature communicates telepathically with the aboleth, the aboleth learns the creature's greatest desires if the aboleth can see the creature."}], 
+		u'condition_immunities': u'', 
+		u'damage_immunities': u'', 
+		u'legendary_actions': [{u'attack_bonus': 0, u'name': u'Detect', u'desc': u'The aboleth makes a Wisdom (Perception) check.'}, {u'attack_bonus': 0, u'name': u'Tail Swipe', u'desc': u'The aboleth makes one tail attack.'}, {u'attack_bonus': 0, u'name': u'Psychic Drain (Costs 2 Actions)', u'desc': u'One creature charmed by the aboleth takes 10 (3d6) psychic damage, and the aboleth regains hit points equal to the damage the creature takes.'}], 
+		u'challenge_rating': 10, 
+	},
+]
+
+
 def guid(): 
 	return base64.urlsafe_b64encode(uuid.uuid4().bytes)
 
@@ -352,6 +387,26 @@ class Token(Dnd5ApiObject):
 			im = self.img.copy() ; im.thumbnail((500,500)) ; im.save(out, format='PNG')
 			zipme.writestr('thumbnail_large', out.getvalue())
 
+def fromText(tfile):
+	"""WIP"""
+	with open(tfile, 'r') as _tfile:
+		text = _tfile.read()
+	# O -> 0
+	# lawful -> tawful
+	count = 0
+	p1 = '([A-Z 0]+)\n(\w+) (\w+)( \(.*?\))?, (tawful|lawful|chaotic|neutral|unaligned)[\s\S]*?STR[\s\S]*?'
+	# 1 -> l
+	p2 = '([0-9lO]+) ?[({]([-+]? ?[0-9lO]+)[)}][\s\S]*?'*3
+	mp1 = re.findall(p1, text)
+	matches = re.findall(p1+p2, text)
+	for m in matches:
+		count+=1
+		print count, m
+	for e in mp1:
+		if e[0] not in [m[0] for m in matches]:
+			print "missing %s" % str(e)
+	
+
 def main():
 	parser = argparse.ArgumentParser(description='Process some integers.')
 	parser.add_argument('--verbose', '-v', action='count')
@@ -361,7 +416,7 @@ def main():
 	if not os.path.exists('build'): os.makedirs('build')
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
-	tokens = Token.load('build')
+	tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	Spell.spellDB = list(Spell.load('build'))
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
@@ -375,4 +430,5 @@ def main():
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)
+	#fromText('volo.txt')
 	main()
