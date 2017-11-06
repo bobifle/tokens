@@ -271,6 +271,7 @@ class Token(Dnd5ApiObject):
 	@property
 	def props(self):
 		return (Prop(name, value) for name, value in [
+			('mname', self.name),
 			('AC', self.armor_class),
 			('MaxHp', self.hit_points),
 			('Hp', self.hit_points),
