@@ -317,8 +317,8 @@ class Token(Dnd5ApiObject):
 			('Intelligence', self.intelligence),
 			('Wisdom', self.wisdom),
 			('Constitution', self.constitution),
-			('Immunity', self.immunities), # XXX add condition immunities ?
-			('Resistance', self.resistances),
+			('Immunities', self.immunities), # XXX add condition immunities ?
+			('Resistances', self.resistances),
 			('CreatureType', self.type + ', CR ' + str(self.challenge_rating)),
 			('Alignment', self.alignment),
 			('Speed', self.speed),
@@ -327,6 +327,7 @@ class Token(Dnd5ApiObject):
 			('Languages', self.languages),
 			('Perception', self.perception),
 			('ImageName', self.img_name),
+			#('Actions', json.dumps({ a["name"]: a["desc"]for a in self.actions})),
 			])
 
 	@property

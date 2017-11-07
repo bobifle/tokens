@@ -1,4 +1,4 @@
-[dialog("Token_Sheet"): {
+[frame("Token_Sheet"): {
 <html>
  <head>
  [r: "<style>
@@ -8,7 +8,7 @@
    border: 0px;
    border-collapse: collapse;
  }
- table.th, table.td {
+ th, td {
   width: 50px;
   text-align: center;
  }
@@ -58,40 +58,36 @@
       <h2>{getProperty("CreatureType")}, {getProperty("alignment")}</h2>
     </creature-heading>
 	<div class="rule"></div>
-	<top-stats>
-      <div class="property-line">
-        <h4>Armor Class</h4>
-        <p>{getProperty("ac")}</p>
-      </div>
-      <div class="propline">
-        <h4>Hit Point</h4>
-        <p>{getProperty("hp")} {getProperty("hitdice")}</p>
-      </div>
-      <div class="propline">
-        <h4>Speed</h4>
-        <p>{getProperty("speed")}</p>
-      </div>
+    <div class="property-line">
+     <h4>Armor Class</h4>
+     <p>{getProperty("ac")}</p>
+    </div>
+    <div class="propline">
+     <h4>Hit Point</h4>
+     <p>{getProperty("hp")} {getProperty("hitdice")}</p>
+    </div>
+    <div class="propline">
+     <h4>Speed</h4>
+     <p>{getProperty("speed")}</p>
+    </div>
 	<div class="rule"></div>
     <table class="sblock">
-    <tbody><tr>
-      <th>STR</th>
-      <th>DEX</th>
-      <th>CON</th>
-      <th>INT</th>
-      <th>WIS</th>
-      <th>CHA</th>
-    </tr>
+    <tr> <th>STR</th><th>DEX</th><th>CON</th><th>INT</th><th>WIS</th><th>CHA</th> </tr>
     <tr>
-      <td id="str"></td>
-      <td id="dex"></td>
-      <td id="con"></td>
-      <td id="int"></td>
-      <td id="wis"></td>
-      <td id="cha"></td>
+      <td id="str">{getProperty("Strength")}</td>
+      <td id="dex">{getProperty("Dexterity")}</td>
+      <td id="con">{getProperty("Constitution")}</td>
+      <td id="int">{getProperty("Intelligence")}</td>
+      <td id="wis">{getProperty("Wisdom")}</td>
+      <td id="cha">{getProperty("Charisma")}</td>
     </tr>
-    </tbody>
     </table>
-   </top-stats>
+	<div class="rule"></div>
+	 <p><b>Senses</b> {getProperty("Senses")}</p>
+	 <p><b>Languages</b> {getProperty("Languages")}</p>
+	 <p><b>Immunities</b> {getProperty("Immunitites")}</p>
+	 <p><b>Resistances</b> {getProperty("Resistances")}</p>
+	<div class="rule"></div>
  </div>
  </body>
 </html>
