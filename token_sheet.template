@@ -85,7 +85,10 @@
 	<div class="rule"></div>
 	 <p><b>Senses</b> {getProperty("Senses")}</p>
 	 <p><b>Languages</b> {getProperty("Languages")}</p>
-	 <p><b>Immunities</b> {getProperty("Immunitites")}</p>
+	 <p><b>Immunities</b>
+	 [h: foo=getProperty("Immunities")]
+	 [foreach(im, foo), r:  im]
+	 </p>
 	 <p><b>Resistances</b> {getProperty("Resistances")}</p>
 	<div class="rule"></div>
  </div>

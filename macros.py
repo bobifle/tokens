@@ -37,7 +37,7 @@ class DescrMacro(Macro):
 		label = action['name']
 		if damage_dice:
 			label += ' +%s %s+%s'%(action['attack_bonus'], damage_dice, damage_bonus)
-		Macro.__init__(self, token, action, label, '''/self {{macro.action['desc']}}''')
+		Macro.__init__(self, token, action, label, '''[s: "{{macro.action['desc']}}"]''')
 	@property
 	def group(self): return 'Action'
 

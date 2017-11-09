@@ -265,10 +265,10 @@ class Token(Dnd5ApiObject):
 	def note(self): return ''
 
 	@property
-	def immunities(self): return json.dumps(self.js.get('damage_immunities', '').split())
+	def immunities(self): return self.js.get('damage_immunities', '')
 
 	@property
-	def resistances(self): return json.dumps(self.js.get('damage_resistances','').split())
+	def resistances(self): return self.js.get('damage_resistances','')
 
 	@property
 	def size_guid(self):
