@@ -346,7 +346,7 @@ class Token(Dnd5ApiObject):
 				# generate the diff ratios
 				ratios = ((f, ratio(short_name(f))) for f in files)
 				# pickup the best match, it's a tuple (fpath, ratio)
-				bfpath, bratio = max(ratios, key = lambda i: i[1])
+				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
 				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
 			if bratio > 0.8:
 				self._img = Image.open(bfpath, 'r') 
