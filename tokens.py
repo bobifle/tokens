@@ -137,6 +137,7 @@ class Dnd5ApiObject(object):
 	# called when an attribute is not found in the Token instance
 	# automatically search for its related item in the json data
 	def __getattr__(self, attr):
+		if attr.lower() == 'charisma' and self.js['name'] == 'Aboleth' : return 18 # 5e api bug
 		v = self.js.get(attr, None)
 		# XXX raising RuntimeError instead of AttributeError, because there's 
 		# a bad interraction between AttributeError and properties
@@ -315,6 +316,7 @@ class Token(Dnd5ApiObject):
 			('Strength', self.strength),
 			('Dexterity', self.dexterity),
 			('Intelligence', self.intelligence),
+			('Initiative', '{Dx}'),
 			('Wisdom', self.wisdom),
 			('Constitution', self.constitution),
 			('Immunities', self.immunities), # XXX add condition immunities ?
@@ -327,7 +329,6 @@ class Token(Dnd5ApiObject):
 			('Languages', self.languages),
 			('Perception', self.perception),
 			('ImageName', self.img_name),
-			#('Actions', json.dumps({ a["name"]: a["desc"]for a in self.actions})),
 			])
 
 	@property
@@ -422,6 +423,7 @@ def main():
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	for token in itertools.islice(tokens, args.max_token):
+		#if 'Mage' not in token.name: continue
 		log.info(token)
 		token.zipme()
 		sTokens.append(token)

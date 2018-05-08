@@ -32,16 +32,42 @@ class Macro(object):
 
 class DescrMacro(Macro):
 	def __init__(self, token, action):
-		damage_dice = action.get('damage_dice', '')
+		Macro.__init__(self, token, action, action['name'], '''[h:data = json.set("{}",
+	"Name", "%s",
+	"Description", "%s")]
+
+[macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc']))
+	@property
+	def group(self): return 'Misc'
+
+class ActionMacro(DescrMacro) :
+	def __init__(self, token, action):
+		damage_dice = action.get('damage_dice', "")
 		damage_bonus = action.get('damage_bonus', 0)
 		label = action['name']
 		if damage_dice:
 			label += ' +%s %s+%s'%(action['attack_bonus'], damage_dice, damage_bonus)
-		Macro.__init__(self, token, action, label, '''[s: "{{macro.action['desc']}}"]''')
+			Macro.__init__(self, token, action, label, '''[h:jsonWeaponData = json.set("{}",
+	"Name", "%s",
+	"DamageDie", "%s",
+	"DamageBonus",%s,
+	"HitBonus",%s,
+	"SecDamageType", 0,
+	"SecDamageDie", 0,
+	"SecDamageBonus",0,
+	"SpecialAbility","",
+	"Description", "%s",
+	"FlavorText","%s attacks!",
+	"ButtonColor","green",
+	"FontColor","white")]
+
+[macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, damage_dice, damage_bonus, action['attack_bonus'], action['desc'], token.name))
+		else:
+			DescrMacro.__init__(self, token, action)
+
 	@property
 	def group(self): return 'Action'
 
-class ActionMacro(DescrMacro) : pass
 class LegendaryMacro(ActionMacro) : 
 	@property
 	def color(self): return 'orange'
