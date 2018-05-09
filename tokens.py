@@ -257,6 +257,12 @@ class Token(Dnd5ApiObject):
 	def legends(self): return self.js.get('legendary_actions', [])
 
 	@property
+	def lair_actions(self): return self.js.get('lair_actions', [])
+
+	@property
+	def regional_effects(self): return self.js.get('regional_effects', [])
+
+	@property
 	def perception(self): return self.js.get('perception', 10+self.bdex)
 
 	@property
@@ -287,7 +293,9 @@ class Token(Dnd5ApiObject):
 	def macros(self): 
 		# get optinal macros related to the token actions
 		actions = (macros.ActionMacro(self, action) for action in self.actions)
-		specials= (macros.SpecialMacro(self, spe) for spe in self.specials)
+		lairs = (macros.LairMacro(self, action) for action in self.lair_actions)
+		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects)
+		specials = (macros.SpecialMacro(self, spe) for spe in self.specials)
 		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
 		attributes = self.scAttributes
 		groupName = 'Spells'
@@ -295,7 +303,32 @@ class Token(Dnd5ApiObject):
 			attr, dc, attack = attributes
 			groupName = 'Spells(%s) DC%s %s' % (attr[:3], dc, attack)
 		spells = (macros.SpellMacro(self, spell, groupName) for spell in self.spells)
-		return itertools.chain(actions, specials, legends, macros.commons(self), spells)
+		return itertools.chain(actions, specials, legends, lairs, reg, macros.commons(self), spells)
+
+	@property
+	def slots(self):
+		slots = {'First':0, 'Second':0, 'Third':0, 'Fourth':0, 'Fifth': 0, 'Sixth':0, 'Seventh':0, 'Eighth':0, 'Ninth':0}
+		if self.sc is not None:
+			sc = self.sc['desc']
+			match = re.search(r'1st level \((\d) slot', sc)
+			slots['First'] = match.group(1) if match else 0
+			match = re.search(r'2nd level \((\d) slot', sc)
+			slots['Second'] = match.group(1) if match else 0
+			match = re.search(r'3rd level \((\d) slot', sc)
+			slots['Third'] = match.group(1) if match else 0
+			match = re.search(r'4th level \((\d) slot', sc)
+			slots['Fourth'] = match.group(1) if match else 0
+			match = re.search(r'5th level \((\d) slot', sc)
+			slots['Fifth'] = match.group(1) if match else 0
+			match = re.search(r'6th level \((\d) slot', sc)
+			slots['Sixth'] = match.group(1) if match else 0
+			match = re.search(r'7th level \((\d) slot', sc)
+			slots['Seventh'] = match.group(1) if match else 0
+			match = re.search(r'8th level \((\d) slot', sc)
+			slots['Eighth'] = match.group(1) if match else 0
+			match = re.search(r'9th level \((\d) slot', sc)
+			slots['Ninth'] = match.group(1) if match else 0
+		return slots
 
 	@property
 	def spells(self):
@@ -329,7 +362,8 @@ class Token(Dnd5ApiObject):
 			('Languages', self.languages),
 			('Perception', self.perception),
 			('ImageName', self.img_name),
-			])
+			]+ [(k, v) for k,v in self.slots.iteritems()]
+			)
 
 	@property
 	def img(self):
@@ -416,14 +450,18 @@ def main():
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
+	with open(r'd:\jeux\vampire V20\maptool\5e-database\5e-SRD-Monsters.json', 'r') as mfile:
+		localMonsters = json.load(mfile)
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
-	tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
+	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
+	# dont use online api, use the fectched local database instead
+	tokens = itertools.chain((Token(m) for m in monsters), (Token(m) for m in localMonsters))
 	Spell.spellDB = list(Spell.load('build'))
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	for token in itertools.islice(tokens, args.max_token):
-		#if 'Mage' not in token.name: continue
+		if 'Ancient Blue' in token.name: log.info(token.js)
 		log.info(token)
 		token.zipme()
 		sTokens.append(token)

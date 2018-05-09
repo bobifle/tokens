@@ -80,7 +80,7 @@
         <autoExecute>true</autoExecute>
         <includeLabel>false</includeLabel>
         <applyToTokens>true</applyToTokens>
-        <fontColorKey>white</fontColorKey>
+        <fontColorKey>{{macro.fontColor}}</fontColorKey>
         <fontSize>1.00em</fontSize>
         <minWidth>90</minWidth>
         <maxWidth></maxWidth>

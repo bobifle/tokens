@@ -30,6 +30,10 @@ class Macro(object):
 	@property
 	def color(self): return {'Health' : 'green', 'Action': 'black'}.get(self.group, 'black')
 
+	@property
+	def fontColor(self): return 'white'
+
+
 class DescrMacro(Macro):
 	def __init__(self, token, action):
 		Macro.__init__(self, token, action, action['name'], '''[h:data = json.set("{}",
@@ -68,9 +72,27 @@ class ActionMacro(DescrMacro) :
 	@property
 	def group(self): return 'Action'
 
+class LairMacro(ActionMacro) : 
+	@property
+	def color(self): return 'orange'
+	@property
+	def fontColor(self): return 'black'
+	@property
+	def group(self): return 'Lair (on init 20)' 
+
+class RegionalEffectMacro(ActionMacro) : 
+	@property
+	def color(self): return 'blue'
+	@property
+	def fontColor(self): return 'white'
+	@property
+	def group(self): return 'Regional Effects' 
+
 class LegendaryMacro(ActionMacro) : 
 	@property
 	def color(self): return 'orange'
+	@property
+	def fontColor(self): return 'black'
 	@property
 	def group(self): return 'Legendary' 
 
@@ -108,7 +130,9 @@ class SheetMacro(Macro):
 	@property
 	def group(self): return 'Sheet'
 	@property
-	def color(self): return 'black'
+	def color(self): return 'yellow'
+	@property
+	def fontColor(self): return 'black'
 
 
 common = [
