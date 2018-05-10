@@ -17,6 +17,8 @@ import io
 import pickle
 import argparse
 import itertools
+import collections
+import urllib
 from PIL import Image
 
 # local import
@@ -91,6 +93,7 @@ class State(object):
 	def __init__(self, name, value):
 		self.name = name
 		self.value = value
+	def __repr__(self): return 'S<%s,%s>' % (self.name, self.value)
 
 class Prop(object):
 	def __init__(self, name, value):
@@ -157,12 +160,56 @@ class Spell(Dnd5ApiObject):
 	sfile_name = 'spells.pickle' 
 	category = 'spells'
 	spellDB = []
+	pattern = r'(\d+d\d+) (\w+) damage'
 
 	@property
-	def desc(self): return '\n'.join(self.js['desc'])
+	def html_desc(self): return ' '.join(self.js['desc']).replace("'", "&#39;")
 
 	@property
-	def comp(self): return ', '.join(self.js['components'])
+	def desc(self): return ' '.join(self.js['desc'])
+
+	@property
+	def classes(self): return [item['name'] for item in self.js['classes']]
+
+	@property
+	def damage(self):
+		match = re.search(self.pattern, self.desc)
+		if match: return match.group(1)
+		return 0
+
+	@property
+	def damage_type(self): 
+		match = re.search(self.pattern, self.desc)
+		if match: return match.group(2)
+		return "Damage"
+
+	@property
+	def school(self): return self.js['school']['name']
+
+	@property
+	def concentration(self): return int(self.js['concentration']=='yes')
+
+	@property
+	def save(self): return "unkown"
+
+	@property
+	def save_type(self): return "unkown type"
+
+	@property
+	def attack(self): return int("spell attack" in self.desc)
+
+	@property
+	def on_hit(self): return ""
+
+	@property
+	def components(self): return ', '.join(self.js['components'])
+
+	@property
+	def ritual(self): return int(self.js['ritual'] == 'yes')
+
+	@property
+	def target(self): return ""
+
 
 class Token(Dnd5ApiObject):
 	sentinel = object()
@@ -199,8 +246,9 @@ class Token(Dnd5ApiObject):
 	@property
 	def content_xml(self):
 		with open('content.template') as template:
-			 t = jinja2.Template(template.read())
-			 return t.render(token=self, guid=guid)
+			t = jinja2.Template(template.read())
+		content = t.render(token=self)
+		return content or ''
 
 	@property
 	def properties_xml(self):
@@ -295,7 +343,7 @@ class Token(Dnd5ApiObject):
 		actions = (macros.ActionMacro(self, action) for action in self.actions)
 		lairs = (macros.LairMacro(self, action) for action in self.lair_actions)
 		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects)
-		specials = (macros.SpecialMacro(self, spe) for spe in self.specials)
+		spellCast = (macros.SpellCastingMacro(self, spe) for spe in self.specials if spe['name']=="SpellCasting")
 		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
 		attributes = self.scAttributes
 		groupName = 'Spells'
@@ -303,32 +351,40 @@ class Token(Dnd5ApiObject):
 			attr, dc, attack = attributes
 			groupName = 'Spells(%s) DC%s %s' % (attr[:3], dc, attack)
 		spells = (macros.SpellMacro(self, spell, groupName) for spell in self.spells)
-		return itertools.chain(actions, specials, legends, lairs, reg, macros.commons(self), spells)
+		return itertools.chain(actions, spellCast, legends, lairs, reg, macros.commons(self), spells)
 
 	@property
-	def slots(self):
-		slots = {'First':0, 'Second':0, 'Third':0, 'Fourth':0, 'Fifth': 0, 'Sixth':0, 'Seventh':0, 'Eighth':0, 'Ninth':0}
+	def slots(self): # current spendable slots
+		slots = collections.OrderedDict()
 		if self.sc is not None:
 			sc = self.sc['desc']
 			match = re.search(r'1st level \((\d) slot', sc)
-			slots['First'] = match.group(1) if match else 0
+			slots['First'] = int(match.group(1)) if match else 0
 			match = re.search(r'2nd level \((\d) slot', sc)
-			slots['Second'] = match.group(1) if match else 0
+			slots['Second'] = int(match.group(1)) if match else 0
 			match = re.search(r'3rd level \((\d) slot', sc)
-			slots['Third'] = match.group(1) if match else 0
+			slots['Third'] = int(match.group(1)) if match else 0
 			match = re.search(r'4th level \((\d) slot', sc)
-			slots['Fourth'] = match.group(1) if match else 0
+			slots['Fourth'] = int(match.group(1)) if match else 0
 			match = re.search(r'5th level \((\d) slot', sc)
-			slots['Fifth'] = match.group(1) if match else 0
+			slots['Fifth'] = int(match.group(1)) if match else 0
 			match = re.search(r'6th level \((\d) slot', sc)
-			slots['Sixth'] = match.group(1) if match else 0
+			slots['Sixth'] = int(match.group(1)) if match else 0
 			match = re.search(r'7th level \((\d) slot', sc)
-			slots['Seventh'] = match.group(1) if match else 0
+			slots['Seventh'] = int(match.group(1)) if match else 0
 			match = re.search(r'8th level \((\d) slot', sc)
-			slots['Eighth'] = match.group(1) if match else 0
+			slots['Eighth'] = int(match.group(1)) if match else 0
 			match = re.search(r'9th level \((\d) slot', sc)
-			slots['Ninth'] = match.group(1) if match else 0
+			slots['Ninth'] = int(match.group(1)) if match else 0
 		return slots
+
+	@property
+	def spell_slots(self): #max slots available
+		spells={}
+		for i, (k,v) in enumerate(self.slots.iteritems()):
+			spells["%s"%(i+1)] = v
+		return spells
+		
 
 	@property
 	def spells(self):
@@ -362,6 +418,7 @@ class Token(Dnd5ApiObject):
 			('Languages', self.languages),
 			('Perception', self.perception),
 			('ImageName', self.img_name),
+			('SpellSlots', self.spell_slots),
 			]+ [(k, v) for k,v in self.slots.iteritems()]
 			)
 
@@ -401,7 +458,7 @@ class Token(Dnd5ApiObject):
 		return self._md5
 
 	@property
-	def states(self): return (s for s in [State('Concentrating', 'false')])
+	def states(self): return [s for s in [State('Concentrating', 'false')]]
 	
 	def zipme(self):
 		"""Zip the token into a rptok file."""
@@ -452,16 +509,21 @@ def main():
 	if not os.path.exists('build'): os.makedirs('build')
 	with open(r'd:\jeux\vampire V20\maptool\5e-database\5e-SRD-Monsters.json', 'r') as mfile:
 		localMonsters = json.load(mfile)
+	
+	if args.verbose:
+		logging.getLogger().setLevel(logging.INFO-args.verbose*10)
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
 	tokens = itertools.chain((Token(m) for m in monsters), (Token(m) for m in localMonsters))
-	Spell.spellDB = list(Spell.load('build'))
+	with open(r'd:\jeux\vampire V20\maptool\5e-database\5e-SRD-Spells.json', 'r') as mfile:
+		localSpells = json.load(mfile)
+	
+	Spell.spellDB = [Spell(spell) for spell in localSpells]
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	for token in itertools.islice(tokens, args.max_token):
-		if 'Ancient Blue' in token.name: log.info(token.js)
 		log.info(token)
 		token.zipme()
 		sTokens.append(token)

@@ -23,7 +23,7 @@
     <td>Duration</td>
     <td>{{spell.duration}}</td>
     <td class="sepl">Components</td>
-    <td>{{spell.comp}}</td>
+    <td>{{spell.components}}</td>
    </tr>
    <tr class="oddRow">
     <td>Casting Time</td>
@@ -32,9 +32,7 @@
     <td>{{spell.concentration}}/{{spell.ritual}}</td>
    </tr>
   </table>
-  {%- for d in spell.js['desc'] %}
-  <p>{{d}}</p>
-  {%- endfor %}
+  <p>{{spell.html_desc}}</p>
  </body>
 </html>
 }]

@@ -97,9 +97,12 @@ class LegendaryMacro(ActionMacro) :
 	def group(self): return 'Legendary' 
 
 
-class SpecialMacro(DescrMacro):
+class SpellCastingMacro(DescrMacro):
+	def __init__(self, token, spell, groupName):
+		self._group = groupName
+		DescrMacro.__init__(self, token, spell)
 	@property
-	def group(self): return 'Special'
+	def group(self): return self._group
 	@property
 	def color(self): return 'maroon'
 
@@ -107,10 +110,35 @@ class SpellMacro(Macro):
 	def __init__(self, token, spell, groupName):
 		# XXX pass the spell as action ... probably a sign of bad design
 		self._group = groupName
-		with open('spell.template') as template:
-			 t = jinja2.Template(template.read())
-			 macro =  t.render(spell=spell)
+		# not used anymore the window popping is annoying
+		#with open('spell.template') as template:
+		#	 t = jinja2.Template(template.read())
+		#	 macro =  t.render(spell=spell)
+		macro = '''
+[h:data = json.set("{}",
+	"Flavor", "Flavor to be customized",
+	"ParentToken",currentToken(),
+	"SpellName", "%s",
+	"sLevel", %s,
+	"sSchool", "%s",
+	"sDamage", "%s",
+	"sDamageType", "%s",
+	"sConcentration",%s,
+	"sSpellSave", "%s",
+	"sSaveType", "%s",
+	"sSpellAttack", %s,
+	"sOnHit", "%s",
+	"sDescription", "%s",
+	"CastTime","%s",
+	"Range", "%s",
+	"Target", "%s",
+	"Components", "%s",
+	"Duration","%s",
+	"Ritual",%s)]
 
+[macro("CastSpell@Lib:Addon5e"):data]
+		''' % (spell.name, spell.level, spell.school, spell.damage, spell.damage_type, spell.concentration, spell.save, spell.save_type, spell.attack, spell.on_hit, spell.desc,
+				spell.casting_time, spell.range, spell.target, spell.components, spell.duration, spell.ritual)
 		Macro.__init__(self, token, spell.js, spell.name, macro)
 		self.action['description'] = '\n'.join(self.action['desc'])
 
