@@ -7,6 +7,31 @@ import copy
 
 log = logging.getLogger(__name__)
 
+spellTemplate = '''
+[h:data = json.set("{}",
+	"Flavor", "{{token.name}} casts {{spell.name}}",
+	"ParentToken",currentToken(),
+	"SpellName", "{{spell.name}}",
+	"sLevel", {{spell.level}},
+	"sSchool", "{{spell.school}}",
+	"sDamage", "{{spell.damage}}",
+	"sDamageType", "{{spell.damage_type}}",
+	"sConcentration", {{spell.concentration}},
+	"sSpellSave", "{{spell.save}}",
+	"sSaveType", "{{spell.save_type}}",
+	"sSpellAttack", {{spell.attack}},
+	"sOnHit", "{{spell.on_hit}}",
+	"sDescription", "{{spell.desc}}",
+	"CastTime","{{spell.casting_time}}",
+	"Range", "{{spell.range}}",
+	"Target", "{{spell.target}}",
+	"Components", "{{spell.components}}",
+	"Duration","{{spell.duration}}",
+	"Ritual", {{spell.ritual}})]
+
+[macro("CastSpell@Lib:Addon5e"):data]
+'''
+
 class Macro(object):
 
 	def __init__(self, token, action, label, command):
@@ -107,39 +132,18 @@ class SpellCastingMacro(DescrMacro):
 	def color(self): return 'maroon'
 
 class SpellMacro(Macro):
-	def __init__(self, token, spell, groupName):
-		# XXX pass the spell as action ... probably a sign of bad design
-		self._group = groupName
+	def __init__(self, token, spell):
+		self._group = 'Level %s' % spell.level if spell.level >= 1 else 'Cantrips'
 		# not used anymore the window popping is annoying
 		#with open('spell.template') as template:
 		#	 t = jinja2.Template(template.read())
 		#	 macro =  t.render(spell=spell)
-		macro = '''
-[h:data = json.set("{}",
-	"Flavor", "Flavor to be customized",
-	"ParentToken",currentToken(),
-	"SpellName", "%s",
-	"sLevel", %s,
-	"sSchool", "%s",
-	"sDamage", "%s",
-	"sDamageType", "%s",
-	"sConcentration",%s,
-	"sSpellSave", "%s",
-	"sSaveType", "%s",
-	"sSpellAttack", %s,
-	"sOnHit", "%s",
-	"sDescription", "%s",
-	"CastTime","%s",
-	"Range", "%s",
-	"Target", "%s",
-	"Components", "%s",
-	"Duration","%s",
-	"Ritual",%s)]
-
-[macro("CastSpell@Lib:Addon5e"):data]
-		''' % (spell.name, spell.level, spell.school, spell.damage, spell.damage_type, spell.concentration, spell.save, spell.save_type, spell.attack, spell.on_hit, spell.desc,
-				spell.casting_time, spell.range, spell.target, spell.components, spell.duration, spell.ritual)
-		Macro.__init__(self, token, spell.js, spell.name, macro)
+		suffix = '('
+		suffix += 'B' if 'bonus' in spell.casting_time else ''
+		suffix += 'R' if 'reaction' in spell.casting_time else ''
+		suffix += (('c' if suffix=='(' else ',c') if spell.concentration else '')
+		suffix += ')'
+		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token))
 		self.action['description'] = '\n'.join(self.action['desc'])
 
 	@property
@@ -151,8 +155,6 @@ class SpellMacro(Macro):
 class SheetMacro(Macro):
 	def __init__(self, token):
 		with open('token_sheet.template') as template:
-			 # t = jinja2.Template(template.read())
-			 # macro =  t.render(token=token)
 			Macro.__init__(self, None, None, 'Sheet', template.read())
 
 	@property

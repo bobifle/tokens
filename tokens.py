@@ -343,14 +343,14 @@ class Token(Dnd5ApiObject):
 		actions = (macros.ActionMacro(self, action) for action in self.actions)
 		lairs = (macros.LairMacro(self, action) for action in self.lair_actions)
 		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects)
-		spellCast = (macros.SpellCastingMacro(self, spe) for spe in self.specials if spe['name']=="SpellCasting")
 		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
 		attributes = self.scAttributes
-		groupName = 'Spells'
+		spellCast = []
 		if attributes:
 			attr, dc, attack = attributes
-			groupName = 'Spells(%s) DC%s %s' % (attr[:3], dc, attack)
-		spells = (macros.SpellMacro(self, spell, groupName) for spell in self.spells)
+			groupName = 'Spells(%s) save DC%s attack %s' % (attr[:3], dc, attack)
+			spellCast = (macros.SpellCastingMacro(self, spe, groupName) for spe in self.specials if spe['name'].lower()=="spellcasting")
+		spells = (macros.SpellMacro(self, spell) for spell in self.spells)
 		return itertools.chain(actions, spellCast, legends, lairs, reg, macros.commons(self), spells)
 
 	@property
