@@ -350,8 +350,9 @@ class Token(Dnd5ApiObject):
 			attr, dc, attack = attributes
 			groupName = 'Spells(%s) save DC%s attack %s' % (attr[:3], dc, attack)
 			spellCast = (macros.SpellCastingMacro(self, spe, groupName) for spe in self.specials if spe['name'].lower()=="spellcasting")
+		specials = (macros.SpecialMacro(self, spe) for spe in self.specials if spe['name'].lower()!="spellcasting")
 		spells = (macros.SpellMacro(self, spell) for spell in self.spells)
-		return itertools.chain(actions, spellCast, legends, lairs, reg, macros.commons(self), spells)
+		return itertools.chain(actions, spellCast, specials, legends, lairs, reg, macros.commons(self), spells)
 
 	@property
 	def slots(self): # current spendable slots

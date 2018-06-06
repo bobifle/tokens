@@ -121,6 +121,11 @@ class LegendaryMacro(ActionMacro) :
 	@property
 	def group(self): return 'Legendary' 
 
+class SpecialMacro(DescrMacro):
+	@property
+	def group(self): return 'special'
+	@property
+	def color(self): return 'maroon'
 
 class SpellCastingMacro(DescrMacro):
 	def __init__(self, token, spell, groupName):
