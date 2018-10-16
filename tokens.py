@@ -27,10 +27,8 @@ import macros
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-imglibs = [
-  '../imglib',
-  r'C:\sources\dnd5\Monster Manual Roll20 Tokens',
-]
+imglib = r'c:/Users/sulay/OneDrive/RPG/maptool cmpgn/imglib'
+imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo'] ]
 
 md5Template = '''<net.rptools.maptool.model.Asset>
   <id>
@@ -427,8 +425,8 @@ class Token(Dnd5ApiObject):
 	@property
 	def pngs(self):
 		if self.pngFiles is self.sentinel:
-			Token.pngFile = list(itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs)))
-		return iter(self.pngFile) if self.pngFile else None
+			Token.pngFiles = list(itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs)))
+		return iter(self.pngFiles) if self.pngFiles else None
 	@property
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
@@ -512,8 +510,7 @@ def main():
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
-	# with open(r'5e-database/5e-SRD-Monsters.json', 'r') as mfile:
-	with open(r'5e-database/5e-SRD-Monsters-volo.json', 'r') as mfile:
+	with open(r'../5e-database/5e-SRD-Monsters-volo.json', 'r') as mfile:
 		localMonsters = json.load(mfile)
 
 	if args.verbose:
@@ -524,7 +521,7 @@ def main():
 	# dont use online api, use the fectched local database instead
 	tokens = itertools.chain((Token(m) for m in monsters), (Token(m) for m in localMonsters))
 	# 5e-database is probably a link
-	with open(r'5e-database/5e-SRD-Spells.json', 'r') as mfile:
+	with open(r'../5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)
 
 	Spell.spellDB = [Spell(spell) for spell in localSpells]
