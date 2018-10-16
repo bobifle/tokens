@@ -78,7 +78,7 @@ monsters = [
 ]
 
 
-def guid(): 
+def guid():
 	return base64.urlsafe_b64encode(uuid.uuid4().bytes)
 
 def dnd5Api(category):
@@ -88,7 +88,7 @@ def dnd5Api(category):
 	for item in items['results']:
 		log.info("fetching %s" % item['name'])
 		yield requests.get(item['url']).json()
-	
+
 class State(object):
 	def __init__(self, name, value):
 		self.name = name
@@ -142,7 +142,7 @@ class Dnd5ApiObject(object):
 	def __getattr__(self, attr):
 		if attr.lower() == 'charisma' and self.js['name'] == 'Aboleth' : return 18 # 5e api bug
 		v = self.js.get(attr, None)
-		# XXX raising RuntimeError instead of AttributeError, because there's 
+		# XXX raising RuntimeError instead of AttributeError, because there's
 		# a bad interraction between AttributeError and properties
 		if v is None: raise RuntimeError("Cannot find the attribute %s" % attr)
 		return v
@@ -157,7 +157,7 @@ class Dnd5ApiObject(object):
 	def __setstate__(self, state): self.js = state['js']
 
 class Spell(Dnd5ApiObject):
-	sfile_name = 'spells.pickle' 
+	sfile_name = 'spells.pickle'
 	category = 'spells'
 	spellDB = []
 	pattern = r'(\d+d\d+) (\w+) damage'
@@ -178,7 +178,7 @@ class Spell(Dnd5ApiObject):
 		return 0
 
 	@property
-	def damage_type(self): 
+	def damage_type(self):
 		match = re.search(self.pattern, self.desc)
 		if match: return match.group(2)
 		return "Damage"
@@ -213,8 +213,9 @@ class Spell(Dnd5ApiObject):
 
 class Token(Dnd5ApiObject):
 	sentinel = object()
-	sfile_name = 'tokens.pickle' 
+	sfile_name = 'tokens.pickle'
 	category = 'monsters'
+	pngFiles = sentinel
 	def __init__(self, js):
 		self.js = js
 		# for cached properties
@@ -222,15 +223,15 @@ class Token(Dnd5ApiObject):
 		self._img = self.sentinel
 		self._md5 = self.sentinel
 
-	def __repr__(self): 
+	def __repr__(self):
 		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s,img=%s>' % (self.name, [
-			self.strength, self.dexterity, self.constitution, 
+			self.strength, self.dexterity, self.constitution,
 			self.intelligence, self.wisdom, self.charisma
 			], self.hit_points, self.roll_max_hp, self.armor_class,
 			self.challenge_rating, self.img_name)
 
 	# The 2 following methods are use by pickle to serialize a token
-	def __setstate__(self, state): 
+	def __setstate__(self, state):
 		Dnd5ApiObject.__setstate__(self, state)
 		self._guid = self.sentinel
 		self._img = self.sentinel
@@ -266,7 +267,7 @@ class Token(Dnd5ApiObject):
 	def bwis(self): return (self.wisdom-10)/2
 
 	@property
-	def roll_max_hp(self): 
+	def roll_max_hp(self):
 		dice, value = map(int, self.hit_dice.split('d'))
 		return '%sd%s+%s' % (dice, value, dice*self.bcon)
 
@@ -277,7 +278,7 @@ class Token(Dnd5ApiObject):
 		hd.update({'1d%s'%value:dice})
 		return hd
 
-	# spellcasting 
+	# spellcasting
 	@property
 	def sc(self): return next((spe for spe in self.specials if spe['name'] == 'Spellcasting'), None)
 
@@ -293,7 +294,7 @@ class Token(Dnd5ApiObject):
 		return (attr, dc, attack) if desc else None
 
 	@property
-	def scDC(self): return 
+	def scDC(self): return
 
 	@property
 	def actions(self): return self.js.get('actions', [])
@@ -338,7 +339,7 @@ class Token(Dnd5ApiObject):
 		}[self.size.lower()]
 
 	@property
-	def macros(self): 
+	def macros(self):
 		# get optinal macros related to the token actions
 		actions = (macros.ActionMacro(self, action) for action in self.actions)
 		lairs = (macros.LairMacro(self, action) for action in self.lair_actions)
@@ -385,7 +386,7 @@ class Token(Dnd5ApiObject):
 		for i, (k,v) in enumerate(self.slots.iteritems()):
 			spells["%s"%(i+1)] = v
 		return spells
-		
+
 
 	@property
 	def spells(self):
@@ -424,6 +425,11 @@ class Token(Dnd5ApiObject):
 			)
 
 	@property
+	def pngs(self):
+		if self.pngFiles is self.sentinel:
+			Token.pngFile = list(itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs)))
+		return iter(self.pngFile) if self.pngFile else None
+	@property
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
 		# using a stupid heuristic: the image / token.name match ratio
@@ -432,18 +438,16 @@ class Token(Dnd5ApiObject):
 			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
 			# morph "/abc/def/anyfile.png" into "anyfile"
 			short_name = lambda full_path: os.path.splitext(os.path.basename(full_path))[0]
-			# list of all img files
-			files = itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs))
 			bratio=0
-			if files:
+			if self.pngs:
 				# generate the diff ratios
-				ratios = ((f, ratio(short_name(f))) for f in files)
+				ratios = ((f, ratio(short_name(f))) for f in self.pngs)
 				# pickup the best match, it's a tuple (fpath, ratio)
 				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
 				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
 			if bratio > 0.8:
-				self._img = Image.open(bfpath, 'r') 
-			else: 
+				self._img = Image.open(bfpath, 'r')
+			else:
 				self._img = Image.open('dft.png', 'r')
 		return self._img
 
@@ -460,7 +464,7 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def states(self): return [s for s in [State('Concentrating', 'false')]]
-	
+
 	def zipme(self):
 		"""Zip the token into a rptok file."""
 		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%self.name), 'w') as zipme:
@@ -499,7 +503,7 @@ def fromText(tfile):
 	for e in mp1:
 		if e[0] not in [m[0] for m in matches]:
 			print "missing %s" % str(e)
-	
+
 
 def main():
 	parser = argparse.ArgumentParser(description='Process some integers.')
@@ -508,9 +512,10 @@ def main():
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
-	with open(r'd:\jeux\vampire V20\maptool\5e-database\5e-SRD-Monsters.json', 'r') as mfile:
+	# with open(r'5e-database/5e-SRD-Monsters.json', 'r') as mfile:
+	with open(r'5e-database/5e-SRD-Monsters-volo.json', 'r') as mfile:
 		localMonsters = json.load(mfile)
-	
+
 	if args.verbose:
 		logging.getLogger().setLevel(logging.INFO-args.verbose*10)
 
@@ -518,9 +523,10 @@ def main():
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
 	tokens = itertools.chain((Token(m) for m in monsters), (Token(m) for m in localMonsters))
-	with open(r'd:\jeux\vampire V20\maptool\5e-database\5e-SRD-Spells.json', 'r') as mfile:
+	# 5e-database is probably a link
+	with open(r'5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)
-	
+
 	Spell.spellDB = [Spell(spell) for spell in localSpells]
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
@@ -528,7 +534,7 @@ def main():
 		log.info(token)
 		token.zipme()
 		sTokens.append(token)
-	
+
 	Token.dump('build', sTokens)
 	Spell.dump('build', Spell.spellDB)
 
