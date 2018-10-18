@@ -4,6 +4,7 @@
 import logging
 import jinja2
 import copy
+import re
 
 log = logging.getLogger(__name__)
 
@@ -71,15 +72,15 @@ class DescrMacro(Macro):
 
 class ActionMacro(DescrMacro) :
 	def __init__(self, token, action):
-		damage_dice = action.get('damage_dice', "")
-		damage_bonus = action.get('damage_bonus', 0)
+		self.action = action
 		label = action['name']
-		if damage_dice:
-			label += ' +%s %s+%s'%(action['attack_bonus'], damage_dice, damage_bonus)
+		if self.damage_dice:
+			label += ' +%s %s+%s'%( self.attack_bonus, self.damage_dice, self.damage_bonus)
 			Macro.__init__(self, token, action, label, '''[h:jsonWeaponData = json.set("{}",
 	"Name", "%s",
 	"DamageDie", "%s",
 	"DamageBonus",%s,
+	"DamageType",%s,
 	"HitBonus",%s,
 	"SecDamageType", 0,
 	"SecDamageDie", 0,
@@ -90,9 +91,50 @@ class ActionMacro(DescrMacro) :
 	"ButtonColor","green",
 	"FontColor","white")]
 
-[macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, damage_dice, damage_bonus, action['attack_bonus'], action['desc'], token.name))
+[macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, action['desc'], token.name))
 		else:
 			DescrMacro.__init__(self, token, action)
+
+	@property
+	def desc(self): return self.action.get('desc', "")
+
+	@property
+	def hit_dd_db_type(self):
+		match = re.search(r'\+(\d+) to hit,.*\((\d+d\d+) \+ (\d+)\) (\w+) damage', self.desc)
+		return match.groups() if match else None
+
+
+	@property
+	def damage_dice(self):
+		dd = self.action.get('damage_dice', None)
+		# try infering the damage dice from the description
+		if dd is None and self.hit_dd_db_type is not None:
+			dd = self.hit_dd_db_type[1]
+		return dd
+
+	@property
+	def damage_bonus(self):
+		db = self.action.get('damage_bonus', None)
+		# try infering the damage dice from the description
+		if db is None and self.hit_dd_db_type is not None:
+			db = self.hit_dd_db_type[2]
+		return db
+
+	@property
+	def damage_type(self):
+		dt = self.action.get('damage_type', None)
+		# try infering the damage dice from the description
+		if dt is None and self.hit_dd_db_type is not None:
+			dt = self.hit_dd_db_type[3]
+		return dt
+
+	@property
+	def attack_bonus(self):
+		ab = self.action.get('attack_bonus', None)
+		# try infering the damage dice from the description
+		if ab is None and self.hit_dd_db_type is not None:
+			ab = self.hit_dd_db_type[0]
+		return ab
 
 	@property
 	def group(self): return 'Action'
