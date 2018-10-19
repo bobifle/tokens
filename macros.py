@@ -40,9 +40,11 @@ class Macro(object):
 		self._label = label
 		self.token = token
 		self.action = action
-	
+
 	def __str__(self): return '%s<%s,grp=%s>' % (self.__class__.__name__, self.label, self.group)
 	def __repr__(self): return str(self)
+
+	def verbose(self): return "\t%s\n" % self
 
 	@property
 	def command(self): return jinja2.Template(self._command).render(macro=self)
@@ -51,7 +53,7 @@ class Macro(object):
 	def label(self): return self._label
 
 	@property
-	def group(self): return 'unknown' 
+	def group(self): return 'unknown'
 
 	@property
 	def color(self): return {'Health' : 'green', 'Action': 'black'}.get(self.group, 'black')
@@ -67,8 +69,18 @@ class DescrMacro(Macro):
 	"Description", "%s")]
 
 [macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc']))
+
 	@property
 	def group(self): return 'Misc'
+
+	@property
+	def desc(self): return self.action.get('desc', "")
+
+	def verbose(self):
+		v = "\t%s\n" % self
+		if self.desc: v+= "\t\t%s\n"%self.desc
+		return v
+
 
 class ActionMacro(DescrMacro) :
 	def __init__(self, token, action):
@@ -95,8 +107,12 @@ class ActionMacro(DescrMacro) :
 		else:
 			DescrMacro.__init__(self, token, action)
 
-	@property
-	def desc(self): return self.action.get('desc', "")
+	def verbose(self):
+		v = "\t%s\n" % self
+		if self.desc: v+= "\t\t%s\n" % self.desc
+		for field in ['damage_dice', 'damage_bonus', 'damage_type']:
+			if getattr(self, field) : v += "\t\t%s: %s\n" % (field, getattr(self, field))
+		return v
 
 	@property
 	def hit_dd_db_type(self):

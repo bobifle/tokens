@@ -18,7 +18,6 @@ import pickle
 import argparse
 import itertools
 import collections
-import urllib
 from PIL import Image
 
 # local import
@@ -40,41 +39,6 @@ md5Template = '''<net.rptools.maptool.model.Asset>
 </net.rptools.maptool.model.Asset>'''
 
 args = None
-
-monsters = [
-	{
-		u'name': u'Aarakocra', 
-		u'size': u'Medium', 
-		u'type': u'humanoid', 
-		u'alignment': u'neutral good', 
-		u'armor_class': 12, 
-		u'hit_points': 13, 
-		u'hit_dice': u'3d8', 
-		u'speed': u'20 ft., fly 50 ft.', 
-		u'strength': 10, 
-		u'dexterity': 14,
-		u'constitution': 10, 
-		u'intelligence': 11,
-		u'wisdom_save': 12,
-		u'charisma': 11, 
-		u'perception': '+5', 
-		u'constitution_save': 0, 
-		u'intelligence_save': 0, 
-		u'actions': [{u'attack_bonus': 0, u'name': u'Multiattack', u'desc': u'The aboleth makes three tentacle attacks.'}, {u'damage_dice': u'2d6', u'damage_bonus': 5, u'attack_bonus': 9, u'name': u'Tentacle', u'desc': u"Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 12 (2d6 + 5) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Constitution saving throw or become diseased. The disease has no effect for 1 minute and can be removed by any magic that cures disease. After 1 minute, the diseased creature's skin becomes translucent and slimy, the creature can't regain hit points unless it is underwater, and the disease can be removed only by heal or another disease-curing spell of 6th level or higher. When the creature is outside a body of water, it takes 6 (1d12) acid damage every 10 minutes unless moisture is applied to the skin before 10 minutes have passed."}, {u'damage_dice': u'3d6', u'damage_bonus': 5, u'attack_bonus': 9, u'name': u'Tail', u'desc': u'Melee Weapon Attack: +9 to hit, reach 10 ft. one target. Hit: 15 (3d6 + 5) bludgeoning damage.'}, {u'attack_bonus': 0, u'name': u'Enslave (3/day)', u'desc': u"The aboleth targets one creature it can see within 30 ft. of it. The target must succeed on a DC 14 Wisdom saving throw or be magically charmed by the aboleth until the aboleth dies or until it is on a different plane of existence from the target. The charmed target is under the aboleth's control and can't take reactions, and the aboleth and the target can communicate telepathically with each other over any distance.\nWhenever the charmed target takes damage, the target can repeat the saving throw. On a success, the effect ends. No more than once every 24 hours, the target can also repeat the saving throw when it is at least 1 mile away from the aboleth."}], 
-		u'damage_resistances': u'', 
-		u'languages': 
-		u'Deep Speech, telepathy 120 ft.',
-		u'damage_vulnerabilities': u'',
-		u'senses': u'darkvision 120 ft., passive Perception 20',
-		u'wisdom': 15, 
-		u'special_abilities': [{u'attack_bonus': 0, u'name': u'Amphibious', u'desc': u'The aboleth can breathe air and water.'}, {u'attack_bonus': 0, u'name': u'Mucous Cloud', u'desc': u'While underwater, the aboleth is surrounded by transformative mucus. A creature that touches the aboleth or that hits it with a melee attack while within 5 ft. of it must make a DC 14 Constitution saving throw. On a failure, the creature is diseased for 1d4 hours. The diseased creature can breathe only underwater.'}, {u'attack_bonus': 0, u'name': u'Probing Telepathy', u'desc': u"If a creature communicates telepathically with the aboleth, the aboleth learns the creature's greatest desires if the aboleth can see the creature."}], 
-		u'condition_immunities': u'', 
-		u'damage_immunities': u'', 
-		u'legendary_actions': [{u'attack_bonus': 0, u'name': u'Detect', u'desc': u'The aboleth makes a Wisdom (Perception) check.'}, {u'attack_bonus': 0, u'name': u'Tail Swipe', u'desc': u'The aboleth makes one tail attack.'}, {u'attack_bonus': 0, u'name': u'Psychic Drain (Costs 2 Actions)', u'desc': u'One creature charmed by the aboleth takes 10 (3d6) psychic damage, and the aboleth regains hit points equal to the damage the creature takes.'}], 
-		u'challenge_rating': 10, 
-	},
-]
-
 
 def guid():
 	return base64.urlsafe_b64encode(uuid.uuid4().bytes)
@@ -312,8 +276,50 @@ class Token(Dnd5ApiObject):
 	@property
 	def perception(self): return self.js.get('perception', 10+self.bdex)
 
+	# saves can be specified in different ways:
+	# either a field "saves": "Saving Throws Int +5, Wis +5, Cha +4"
+	# or respective field like "wisdom_save": 5
 	@property
-	def wisdom_save(self): return self.js.get('wisdom_save', 10+self.bwis)
+	def saves(self): return self.js.get('saves', "")
+
+	@property
+	def extracted_saves(self):
+		# extract all saves from "Saving Throws Int +5, Wis +5, Cha +4"
+		extract = {}
+		if self.saves == "": return extract
+		for key, pattern in [
+				('wisdom', r'Wis \+(\d+)'),
+				('charisma', r'Cha \+(\d+)'),
+				('strength', r'Str \+(\d+)'),
+				('dexterity', r'Dex \+(\d+)'),
+				('constitution', r'Con \+(\d+)'),
+				('intelligence', r'Int \+(\d+)'),
+				]:
+			match = re.search(pattern, self.saves)
+			if match: extract[key] = int(match.group(1))
+		return extract
+
+	# fetch the wisdom save using in that order:
+	# the "wisdom_save" field value from json
+	# the value extracted from the json field "saves"
+	# the computed value attribute bonus
+	@property
+	def strength_save(self): return self.js.get('strength_save', self.extracted_saves.get('strength', self.bwis))
+
+	@property
+	def dexterity_save(self): return self.js.get('dexterity_save', self.extracted_saves.get('dexterity', self.bwis))
+
+	@property
+	def constitution_save(self): return self.js.get('constitution_save', self.extracted_saves.get('constitution', self.bcon))
+
+	@property
+	def intelligence_save(self): return self.js.get('intelligence_save', self.extracted_saves.get('intelligence', self.bcon))
+
+	@property
+	def wisdom_save(self): return self.js.get('wisdom_save', self.extracted_saves.get('wisdom', self.bwis))
+
+	@property
+	def charisma_save(self): return self.js.get('charisma_save', self.extracted_saves.get('charisma', self.bwis))
 
 	@property
 	def note(self): return ''
@@ -339,17 +345,17 @@ class Token(Dnd5ApiObject):
 	@property
 	def macros(self):
 		# get optinal macros related to the token actions
-		actions = (macros.ActionMacro(self, action) for action in self.actions)
-		lairs = (macros.LairMacro(self, action) for action in self.lair_actions)
-		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects)
-		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends)
+		actions = (macros.ActionMacro(self, action) for action in self.actions if action["name"])
+		lairs = (macros.LairMacro(self, action) for action in self.lair_actions if action["name"])
+		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects if action["name"])
+		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends if leg["name"])
 		attributes = self.scAttributes
 		spellCast = []
 		if attributes:
 			attr, dc, attack = attributes
 			groupName = 'Spells(%s) save DC%s attack %s' % (attr[:3], dc, attack)
 			spellCast = (macros.SpellCastingMacro(self, spe, groupName) for spe in self.specials if spe['name'].lower()=="spellcasting")
-		specials = (macros.SpecialMacro(self, spe) for spe in self.specials if spe['name'].lower()!="spellcasting")
+		specials = (macros.SpecialMacro(self, spe) for spe in self.specials if spe['name'] and spe['name'].lower()!="spellcasting")
 		spells = (macros.SpellMacro(self, spell) for spell in self.spells)
 		return itertools.chain(actions, spellCast, specials, legends, lairs, reg, macros.commons(self), spells)
 
@@ -483,6 +489,14 @@ class Token(Dnd5ApiObject):
 			im = self.img.copy() ; im.thumbnail((500,500)) ; im.save(out, format='PNG')
 			zipme.writestr('thumbnail_large', out.getvalue())
 
+	def verbose(self):
+		v = "%s\n" % self
+		v += "\tsaves: "
+		v += ', '.join([save[:3] + " +%s" %getattr(self, save+"_save")for save in ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]])
+		for m in self.macros:
+			v+="\n%s"%m.verbose()
+		return v
+
 def fromText(tfile):
 	"""WIP"""
 	with open(tfile, 'r') as _tfile:
@@ -513,13 +527,19 @@ def main():
 	with open(r'../5e-database/5e-SRD-Monsters-volo.json', 'r') as mfile:
 		localMonsters = json.load(mfile)
 
-	if args.verbose:
-		logging.getLogger().setLevel(logging.INFO-args.verbose*10)
+	mLog = logging.getLogger()
+	mLog.setLevel(logging.DEBUG)
+	mLog.handlers[-1].setLevel(logging.INFO-(args.verbose or 0)*10)
+	fh = logging.FileHandler(os.path.join('build', 'tokens.log'), mode="w") # mode w will erase previous logs
+	fh.setLevel(logging.DEBUG)
+	fh.setFormatter(logging.Formatter('%(name)s : %(levelname)s : %(message)s'))
+	mLog.addHandler(fh)
+
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
-	tokens = itertools.chain((Token(m) for m in monsters), (Token(m) for m in localMonsters))
+	tokens = (Token(m) for m in localMonsters)
 	# 5e-database is probably a link
 	with open(r'../5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)
@@ -529,6 +549,7 @@ def main():
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
+		log.debug(token.verbose())
 		token.zipme()
 		sTokens.append(token)
 
