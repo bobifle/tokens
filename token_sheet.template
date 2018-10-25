@@ -83,14 +83,23 @@
     </tr>
     </table>
 	<div class="rule"></div>
+	 <p><b>Saves</b> {getProperty("Saves")}</p>
+	 <p><b>Skills</b> {getProperty("Skills")}</p>
 	 <p><b>Senses</b> {getProperty("Senses")}</p>
 	 <p><b>Languages</b> {getProperty("Languages")}</p>
-	 <p><b>Immunities</b>
-	 [h: foo=getProperty("Immunities")]
-	 [foreach(im, foo), r:  im]
-	 </p>
+	 <p><b>Immunities</b> {getProperty("Immunities")} </p>
 	 <p><b>Resistances</b> {getProperty("Resistances")}</p>
+	 <p><b>Vulnerabilities</b> {getProperty("Vulnerabilities")}</p>
 	<div class="rule"></div>
+	{% for special in macro.token.specials %}
+	<p><b>{{special.name}}</b> {{special.desc}}</p>
+	{% endfor %}
+	<p></p>
+     <h3>ACTIONS</h3>
+	<div class="rule"></div>
+	{% for action in macro.token.actions %}
+	<p><b>{{action.name}}</b> {{action.desc}}</p>
+	{% endfor %}
  </div>
  </body>
 </html>

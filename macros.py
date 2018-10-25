@@ -74,6 +74,9 @@ class DescrMacro(Macro):
 	def group(self): return 'Misc'
 
 	@property
+	def name(self): return self.action.get('name', "")
+
+	@property
 	def desc(self): return self.action.get('desc', "")
 
 	def verbose(self):
@@ -110,7 +113,7 @@ class ActionMacro(DescrMacro) :
 	def verbose(self):
 		v = "\t%s\n" % self
 		if self.desc: v+= "\t\t%s\n" % self.desc
-		for field in ['damage_dice', 'damage_bonus', 'damage_type']:
+		for field in ['attack_bonus', 'damage_dice', 'damage_bonus', 'damage_type', 'reach']:
 			if getattr(self, field) : v += "\t\t%s: %s\n" % (field, getattr(self, field))
 		return v
 
@@ -151,6 +154,14 @@ class ActionMacro(DescrMacro) :
 		if ab is None and self.hit_dd_db_type is not None:
 			ab = self.hit_dd_db_type[0]
 		return ab
+
+	@property
+	def reach(self):
+		reach = self.action.get('reach', None)
+		if reach is None:
+			match = re.search(r'reach (\d+) ?ft\.', self.desc)
+			if match: reach = int(match.group(1))
+		return reach
 
 	@property
 	def group(self): return 'Action'

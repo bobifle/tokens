@@ -276,6 +276,18 @@ class Token(Dnd5ApiObject):
 	@property
 	def perception(self): return self.js.get('perception', 10+self.bdex)
 
+	@property
+	def vulnerabilities(self): return self.js.get('damage_vulnerabilities', "")
+
+	@property
+	def immunities(self): return self.js.get('damage_immunities', "")
+
+	@property
+	def resistances(self): return self.js.get('damage_immunities', "")
+
+	@property
+	def skills(self): return self.js.get('skills', "")
+
 	# saves can be specified in different ways:
 	# either a field "saves": "Saving Throws Int +5, Wis +5, Cha +4"
 	# or respective field like "wisdom_save": 5
@@ -391,12 +403,11 @@ class Token(Dnd5ApiObject):
 			spells["%s"%(i+1)] = v
 		return spells
 
-
 	@property
 	def spells(self):
 		spells = []
-		for ability in (a for a in self.specials if a['name'] == 'Spellcasting'):
-			spells = [s for s in Spell.spellDB if s.name.lower() in ability['desc']]
+		for ability in (a for a in self.specials if 'spellcasting' in a['name'].lower()):
+			spells.extend([s for s in Spell.spellDB if s.name.lower() in ability['desc']])
 		return spells
 
 	@property
@@ -419,7 +430,12 @@ class Token(Dnd5ApiObject):
 			('CreatureType', self.type + ', CR ' + str(self.challenge_rating)),
 			('Alignment', self.alignment),
 			('Speed', self.speed),
+			('Saves', self.saves),
+			('Skills', self.skills),
 			('Senses', self.senses),
+			('Vulnerabilities', self.vulnerabilities),
+			('Resistances', self.resistances),
+			('Immunities', self.immunities),
 			('WisdomSave', self.wisdom_save),
 			('Languages', self.languages),
 			('Perception', self.perception),
@@ -491,8 +507,8 @@ class Token(Dnd5ApiObject):
 
 	def verbose(self):
 		v = "%s\n" % self
-		v += "\tsaves: "
-		v += ', '.join([save[:3] + " +%s" %getattr(self, save+"_save")for save in ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]])
+		for attr in ['saves', 'skills', 'senses', 'vulnerabilities', 'immunities', 'resistances', 'slots', 'spell_slots']:
+			v+= '%s: %s\n' % (attr, getattr(self, attr))
 		for m in self.macros:
 			v+="\n%s"%m.verbose()
 		return v
