@@ -95,7 +95,7 @@ class ActionMacro(DescrMacro) :
 	"Name", "%s",
 	"DamageDie", "%s",
 	"DamageBonus",%s,
-	"DamageType",%s,
+	"DamageType","%s",
 	"HitBonus",%s,
 	"SecDamageType", 0,
 	"SecDamageDie", 0,
