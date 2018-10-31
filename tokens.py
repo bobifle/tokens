@@ -27,6 +27,8 @@ log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
 imglib = r'c:/Users/sulay/OneDrive/RPG/maptool cmpgn/imglib'
+if not os.path.exists(imglib):
+	imglib = '../imglib'
 imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo'] ]
 
 md5Template = '''<net.rptools.maptool.model.Asset>
@@ -449,6 +451,7 @@ class Token(Dnd5ApiObject):
 		if self.pngFiles is self.sentinel:
 			Token.pngFiles = list(itertools.chain(*(glob.glob(os.path.join(os.path.expanduser(imglib), '*.png')) for imglib in imglibs)))
 		return iter(self.pngFiles) if self.pngFiles else None
+
 	@property
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
@@ -513,25 +516,19 @@ class Token(Dnd5ApiObject):
 			v+="\n%s"%m.verbose()
 		return v
 
-def fromText(tfile):
-	"""WIP"""
-	with open(tfile, 'r') as _tfile:
-		text = _tfile.read()
-	# O -> 0
-	# lawful -> tawful
-	count = 0
-	p1 = '([A-Z 0]+)\n(\w+) (\w+)( \(.*?\))?, (tawful|lawful|chaotic|neutral|unaligned)[\s\S]*?STR[\s\S]*?'
-	# 1 -> l
-	p2 = '([0-9lO]+) ?[({]([-+]? ?[0-9lO]+)[)}][\s\S]*?'*3
-	mp1 = re.findall(p1, text)
-	matches = re.findall(p1+p2, text)
-	for m in matches:
-		count+=1
-		print count, m
-	for e in mp1:
-		if e[0] not in [m[0] for m in matches]:
-			print "missing %s" % str(e)
+class LibToken(Token):
+	def __init__(self, name):
+		Token.__init__(self, {'name': name, 'size': 'large'})
+		self._macros = []
+	def __repr__(self): return 'LibToken<%s>' % self.name
+	@property
+	def macros(self): return self._macros
+	@property
+	def props(self): return []
+	@property
+	def spells(self): return []
 
+	def add(self, macro): self._macros.append(macro)
 
 def main():
 	parser = argparse.ArgumentParser(description='Process some integers.')
@@ -551,6 +548,12 @@ def main():
 	fh.setFormatter(logging.Formatter('%(name)s : %(levelname)s : %(message)s'))
 	mLog.addHandler(fh)
 
+	# generate the lib addon token
+	addon = LibToken('Lib:Addon5e')
+	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('description.template', 'r').read()).render()))
+	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('castSpell.template', 'r').read()).render()))
+	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('npcAttack.template', 'r').read()).render()))
+	addon.zipme()
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
@@ -574,5 +577,4 @@ def main():
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.INFO)
-	#fromText('volo.txt')
 	main()

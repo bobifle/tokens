@@ -1,0 +1,109 @@
+[h:Flavor=json.get(macro.args,"Flavor")]
+[h:ParentToken=json.get(macro.args,"ParentToken")]
+[h:SpellName=json.get(macro.args,"SpellName")]
+[h:sLevel=json.get(macro.args,"sLevel")]
+[h:Ritual=json.get(macro.args,"Ritual")]
+[h:sSchool=json.get(macro.args,"sSchool")]
+[h:CastTime=json.get(macro.args,"CastTime")]
+[h:Range=json.get(macro.args,"Range")]
+[h:Target=json.get(macro.args,"Target")]
+[h:Components=json.get(macro.args,"Components")]
+[h:Duration=json.get(macro.args,"Duration")]
+[h:sDamage=json.get(macro.args,"sDamage")]
+[h:sDamageType=json.get(macro.args,"sDamageType")]
+[h:sConcentration=json.get(macro.args,"sConcentration")]
+[h:sSpellSave=json.get(macro.args,"sSpellSave")]
+[h:sSaveType=json.get(macro.args,"sSaveType")]
+[h:sSpellAttack=json.get(macro.args,"sSpellAttack")]
+[h:sOnHit=json.get(macro.args,"sOnHit")]
+[h:sDescription=json.get(macro.args,"sDescription")]
+
+[h:BaseLink="https://www.dndbeyond.com/spells/"]
+[h:CompendiumLink=concat('<a href=',BaseLink,replace(SpellName,' ','-'),'>',SpellName,'</a>')]
+
+<!--- Dialogue --->
+
+[h:LevelOptions=
+	if(sLevel<=1,if(json.get(SpellSlots,"1")>0,"1,",""),"")
+	+if(sLevel<=2,if(json.get(SpellSlots,"2")>0,"2,",""),"")
+	+if(sLevel<=3,if(json.get(SpellSlots,"3")>0,"3,",""),"")
+	+if(sLevel<=4,if(json.get(SpellSlots,"4")>0,"4,",""),"")
+	+if(sLevel<=5,if(json.get(SpellSlots,"5")>0,"5,",""),"")
+	+if(sLevel<=6,if(json.get(SpellSlots,"6")>0,"6,",""),"")
+	+if(sLevel<=7,if(json.get(SpellSlots,"7")>0,"7,",""),"")
+	+if(sLevel<=8,if(json.get(SpellSlots,"8")>0,"8,",""),"")
+	+if(sLevel<=9,if(json.get(SpellSlots,"9")>0,"9,",""),"")
+]
+
+
+<!--- Cancel Old Spell Notice --->
+
+{if(getState("Concentrating")==1,if(sConcentration==1,
+	"<div style='background-color: #02F5F5; color: #000000; padding-top:2px; padding-bottom:2px; padding-left:8px; padding-right:8px;'>
+		<b>End Concentration</b>
+		<div style='background-color:#FFFFFF; color: #000000; padding:2px; width:400px;'>
+			<div style='background-color:#DDDDDD; color: #000000; padding:2px; margin-bottom:-5px;'>
+				<i>"+token.name+" changes tactics.</i>
+			</div>
+			"+token.name+" has stopped concentrating on "+Concentration+".
+		</div>
+	</div>",""
+),"")}
+
+<!--- Cancel Old Spell Notice --->
+
+[h,switch(sLevel),code:
+	case "Ritual": {[BorderColor="#93160D"][TextColor="#FFFFFF"][eLevel=0]};
+	case "0": {[BorderColor="#93160D"][TextColor="#FFFFFF"][eLevel=0]};
+	case "1": {[BorderColor="#fd2a19"][TextColor="#FFFFFF"][eLevel=1][SpellSlots=json.set(SpellSlots,"1",json.get(SpellSlots,"1")-1)]};
+	case "2": {[BorderColor="#f7ae27"][TextColor="#000000"][eLevel=2][SpellSlots=json.set(SpellSlots,"2",json.get(SpellSlots,"2")-1)]};
+	case "3": {[BorderColor="#fcf734"][TextColor="#000000"][eLevel=3][SpellSlots=json.set(SpellSlots,"3",json.get(SpellSlots,"3")-1)]};
+	case "4": {[BorderColor="#c3f130"][TextColor="#000000"][eLevel=4][SpellSlots=json.set(SpellSlots,"4",json.get(SpellSlots,"4")-1)]};
+	case "5": {[BorderColor="#008c14"][TextColor="#FFFFFF"][eLevel=5][SpellSlots=json.set(SpellSlots,"5",json.get(SpellSlots,"5")-1)]};
+	case "6": {[BorderColor="#103ffb"][TextColor="#FFFFFF"][eLevel=6][SpellSlots=json.set(SpellSlots,"6",json.get(SpellSlots,"6")-1)]};
+	case "7": {[BorderColor="#052090"][TextColor="#FFFFFF"][eLevel=7][SpellSlots=json.set(SpellSlots,"7",json.get(SpellSlots,"7")-1)]};
+	case "8": {[BorderColor="#8e268c"][TextColor="#FFFFFF"][eLevel=8][SpellSlots=json.set(SpellSlots,"8",json.get(SpellSlots,"8")-1)]};
+	case "9": {[BorderColor="#f84af4"][TextColor="#FFFFFF"][eLevel=9][SpellSlots=json.set(SpellSlots,"9",json.get(SpellSlots,"9")-1)]};
+	case "W": {[BorderColor="#000000"][TextColor="#FFFFFF"][eLevel=WSpellLevel][SpellSlots=json.set(SpellSlots,"W",json.get(SpellSlots,"W")-1)]};
+	case "MA": {[BorderColor="#000000"][TextColor="#FFFFFF"][eLevel=sLevel][MysticArcanum=json.set(MysticArcanum,sLevel,0)]};
+	case "Free": {[BorderColor="02f5f6"][TextColor="#000000"][eLevel=-1]}
+]
+
+[h:roll1=1d20]
+[h:roll2=1d20]
+[h:rsDamage=eval(string(sDamage))]
+[h:crsDamage=eval(string(sDamage))]
+[h:SpellDamage=rsDamage]
+
+
+[h:CritSpellDamage=rsDamage+crsDamage]
+[h:setState("Concentrating",if(sConcentration==1,1,getState("Concentrating")))]
+[h:Concentration=if(sConcentration==1,SpellName,Concentration)]
+
+[h:MAXsDamage=eval(if(indexOf(sDamage,"d")<0,1,substring(sDamage,0,max(indexOf(sDamage,"d"),1)))+"*"+substring(sDamage,indexOf(sDamage,"d")+1))]
+[h:MAXTotalDamage=MAXsDamage]
+
+[h:CompendiumLink=concat('<a style="color:'+TextColor+';" href=',BaseLink,replace(SpellName,' ','-'),'>',SpellName,'</a>')]
+
+<div style="background-color: {BorderColor}; color: {TextColor}; padding-top:2px; padding-bottom:2px; padding-left:8px; padding-right:8px;">
+	<b>{CompendiumLink}</b> ({sLevel}) <i>{sSchool} {if(Ritual==1,"(ritual)","")}</i>
+	<div style="background-color:#FFFFFF; color: #000000; padding:2px; width:400px;">
+		<div style="background-color:#DDDDDD; color: #000000; padding:2px; margin-bottom:-5px;">
+			<i>{Flavor}</i>
+		</div>
+		<table style="padding:3px;">
+			<tr><th style='text-align:right; background-color:#DDDDDD;'>Cast as</th><td>NPC</td></tr>
+			{if(CastTime=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>Casting Time</th><td>"+CastTime+"</td></tr>")}
+			{if(Range=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>Range</th><td>"+Range+"</td></tr>")}
+			
+			{if(Target=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>Target</th><td>"+Target+"</td></tr>")}
+			{if(Components=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>Components</th><td>"+Components+"</td></tr>")}
+			{if(Duration=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>Duration</th><td>"+Duration+"</td></tr>")}
+			{if(sSpellAttack==0,"","<tr><th style='text-align:right; background-color:#DDDDDD;'>Spell Attack</th><td>"+if(roll1==20,"<span style='font-size:1.5em; color:#AA2222;'>",if(roll1==1,"<span style='font-size:1.5em; color:#2222AA'>","<span style='font-size:1.5em;'>")))}
+			{if(sDamage=="0","","<tr><th style='text-align:right; background-color:#DDDDDD;'>"+sDamageType+if(sDamageType=="Healing",""," Damage ")+"</th><td>"+sDamage+"=<b><span style='color:#"+if(sDamageType=="Healing","22AA22","AA2222")+"; font-size:1.5em'> "+SpellDamage+"</span></b>"+if(sSpellSave==1," (On Save:<b> "+floor(SpellDamage/2)+")","")+"</b></td></tr>")}
+			{if(sSpellAttack==1,if(max(roll1,roll2)==20,if(sDamage=="0","","<tr><th style='text-align:right; background-color:#DDDDDD;'>"+sDamageType+" Damage on Crit</th><td>"+sDamage+"+"+sDamage+"=<b><span style='color:#AA2222; font-size:1.5em'> "+CritSpellDamage+"</span></b>"+if(sSpellSave==1," (On Save:<b> "+floor(CritSpellDamage/2)+")","")+"</td></tr>"),""),"")}
+			{if(sOnHit=="","","<tr><th style='text-align:right; background-color:#DDDDDD;'>On Hit</th><td>"+sOnHit+"</td></tr>")}
+		</table>
+		{sDescription}
+	</div>
+</div>

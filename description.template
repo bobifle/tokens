@@ -1,0 +1,12 @@
+<!--Based on Attack@lib:Melek where all PC specifics have been removed-->
+<!--Macro Arguments-->
+[h:ParentToken=json.get(macro.args,"ParentToken")]
+[h:wName=json.get(macro.args,"Name")]
+[h:wDesc=json.get(macro.args,"Description")]
+
+<div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
+	<b> {wName} </b>
+	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
+		{wDesc}
+	</div>
+</div>

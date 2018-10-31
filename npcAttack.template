@@ -1,0 +1,51 @@
+<!--Based on Attack@lib:Melek where all PC specifics have been removed-->
+<!--Macro Arguments-->
+[h:Flavor=json.get(macro.args,"FlavorText")]
+[h:ParentToken=json.get(macro.args,"ParentToken")]
+[h:wName=json.get(macro.args,"Name")]
+[h:HitBonus=json.get(macro.args,"HitBonus")]
+[h:wDamageDie=json.get(macro.args,"DamageDie")]
+[h:wDamageBonus=json.get(macro.args,"DamageBonus")]
+[h:wSecDamageDie=json.get(macro.args,"SecDamageDie")]
+[h:wSecDamageBonus=json.get(macro.args,"SecDamageBonus")]
+[h:wSecDamageType=json.get(macro.args,"SecDamageType")]
+[h:wDesc=json.get(macro.args,"Description")]
+[h:wSpecialAbility=json.get(macro.args,"SpecialAbility")]
+
+[h:fCritMultiplier=2]
+[h:fCritRange=20]
+[h:CritDmgDie=(fCritMultiplier*number(substring(wDamageDie,0,indexOf(wDamageDie,"d"))))+substring(wDamageDie,indexOf(wDamageDie,"d"))]
+
+<div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
+	<b> {wName} </b>
+	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
+		<div style="background-color:#DDDDDD; color: #000000; padding:2px; margin-bottom:-5px;"><i>{Flavor}</i>	</div>
+
+		[h:Roll1=1d20]
+		[h:Roll2=1d20]
+		[h:wDmg=eval(wDamageDie)]
+		[h:wCritDmg=eval(CritDmgDie)]
+
+		<span style='font-size:1.5em;'>Attack: <b><span style='[r:if(roll1>=fCritRange,'font-size:2em; color:#AA2222;','')][r:if(roll1==1,'font-size:2em; color:#2222AA;','')]'>[roll1+HitBonus]</span></b></span><br>
+
+		(Adv: <b><span style='[r:if(Max(roll1,roll2)>=fCritRange,'font-size:2em; color:#AA2222;','')][r:if(Max(roll1,roll2)==1,'font-size:2em; color:#2222AA;','')]'>[Max(roll1,roll2)+HitBonus]</span></b>
+
+		 / Dis: <b><span style='[r:if(Min(roll1,roll2)>=fCritRange,'font-size:2em; color:#AA2222;','')][r:if(Min(roll1,roll2)==1,'font-size:2em; color:#2222AA;','')]'>[Min(roll1,roll2)+HitBonus]</span></b>)<br>
+
+		<span style='font-size:1.5em;'>Damage: <b>[wDmg+HitBonus]</b></br>
+
+		<span style='color:AA2222;'>[r:If(Max(roll1,roll2)>=fCritRange,' Crit: ','')]<b>[If(Max(roll1,roll2)>=fCritRange,wDmg+wCritDmg+wDamageBonus,'')]</b></span></span><br>
+
+    	[if(wSecDamageDie==0),code:{};{
+			[h:CritSecDmgDie=(fCritMultiplier*number(substring(wSecDamageDie,0,indexOf(wSecDamageDie,"d"))))+substring(wSecDamageDie,indexOf(wSecDamageDie,"d"))]
+			[h:wSecDmg=eval(wSecDamageDie)]
+			[h:wCritSecDmg=eval(CritSecDmgDie)]
+			<span style='font-size:1.5em;'>{wSecDamageType} Damage: <b>[wSecDmg + wSecDamageBonus]</b></br>
+
+			<span style='color:AA2222;'>[r:If(Max(roll1,roll2)>=fCritRange,' Crit: ','')]<b>[If(Max(roll1,roll2)>=fCritRange,(wSecDmg+wCritSecDmg),'')]</b></span></span><br>
+		}]
+		
+		{wDesc+"<br>"}
+		{wSpecialAbility}
+	</div>
+</div>
