@@ -537,8 +537,10 @@ def main():
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
-	with open(r'../5e-database/5e-SRD-Monsters-volo.json', 'r') as mfile:
-		localMonsters = json.load(mfile)
+	localMonsters = []
+	for f in [r'../5e-database/5e-SRD-Monsters-volo.json', r'../5e-database/5e-SRD-Monsters.json']:
+		with open(f, 'r') as mfile:
+			localMonsters += json.load(mfile)
 
 	mLog = logging.getLogger()
 	mLog.setLevel(logging.DEBUG)

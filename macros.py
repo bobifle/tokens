@@ -125,40 +125,40 @@ class ActionMacro(DescrMacro) :
 
 	@property
 	def damage_dice(self):
-		dd = self.action.get('damage_dice', None)
+		dd = self.action.get('damage_dice', "")
 		# try infering the damage dice from the description
-		if dd is None and self.hit_dd_db_type is not None:
+		if dd == "" and self.hit_dd_db_type is not None:
 			dd = self.hit_dd_db_type[1]
 		return dd
 
 	@property
 	def damage_bonus(self):
-		db = self.action.get('damage_bonus', None)
+		db = self.action.get('damage_bonus', 0)
 		# try infering the damage dice from the description
-		if db is None and self.hit_dd_db_type is not None:
+		if db == 0 and self.hit_dd_db_type is not None:
 			db = self.hit_dd_db_type[2]
 		return db
 
 	@property
 	def damage_type(self):
-		dt = self.action.get('damage_type', None)
+		dt = self.action.get('damage_type', "")
 		# try infering the damage dice from the description
-		if dt is None and self.hit_dd_db_type is not None:
+		if dt == "" and self.hit_dd_db_type is not None:
 			dt = self.hit_dd_db_type[3]
 		return dt
 
 	@property
 	def attack_bonus(self):
-		ab = self.action.get('attack_bonus', None)
+		ab = self.action.get('attack_bonus', 0)
 		# try infering the damage dice from the description
-		if ab is None and self.hit_dd_db_type is not None:
+		if ab == 0 and self.hit_dd_db_type is not None:
 			ab = self.hit_dd_db_type[0]
 		return ab
 
 	@property
 	def reach(self):
-		reach = self.action.get('reach', None)
-		if reach is None:
+		reach = self.action.get('reach', 0)
+		if reach == 0 :
 			match = re.search(r'reach (\d+) ?ft\.', self.desc)
 			if match: reach = int(match.group(1))
 		return reach
