@@ -32,7 +32,7 @@
 
 		 / Dis: <b><span style='[r:if(Min(roll1,roll2)>=fCritRange,'font-size:2em; color:#AA2222;','')][r:if(Min(roll1,roll2)==1,'font-size:2em; color:#2222AA;','')]'>[Min(roll1,roll2)+HitBonus]</span></b>)<br>
 
-		<span style='font-size:1.5em;'>Damage: <b>[wDmg+HitBonus]</b></br>
+		<span style='font-size:1.5em;'>Damage: <b>[wDmg+wDamageBonus]</b></br>
 
 		<span style='color:AA2222;'>[r:If(Max(roll1,roll2)>=fCritRange,' Crit: ','')]<b>[If(Max(roll1,roll2)>=fCritRange,wDmg+wCritDmg+wDamageBonus,'')]</b></span></span><br>
 

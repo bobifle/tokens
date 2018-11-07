@@ -490,7 +490,7 @@ class Token(Dnd5ApiObject):
 
 	def zipme(self):
 		"""Zip the token into a rptok file."""
-		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%self.name), 'w') as zipme:
+		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%(self.name.replace(":","_"))), 'w') as zipme:
 			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
 			zipme.writestr('properties.xml', self.properties_xml)
 			log.debug('Token image md5 %s' % self.md5)
