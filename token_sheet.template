@@ -92,13 +92,13 @@
 	 <p><b>Vulnerabilities</b> {getProperty("Vulnerabilities")}</p>
 	<div class="rule"></div>
 	{% for special in macro.token.specials %}
-	<p><b>{{special.name}}</b> {{special.desc|e}}</p>
+	<p><b>{{special.name|e}}</b> {{special.desc|e}}</p>
 	{% endfor %}
 	<p></p>
      <h3>ACTIONS</h3>
 	<div class="rule"></div>
 	{% for action in macro.token.actions %}
-	<p><b>{{action.name}}</b> {{action.desc|e}}</p>
+	<p><b>{{action.name|e}}</b> {{action.desc|e}}</p>
 	{% endfor %}
  </div>
  </body>
