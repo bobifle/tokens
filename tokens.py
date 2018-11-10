@@ -544,7 +544,7 @@ def main():
 
 	mLog = logging.getLogger()
 	mLog.setLevel(logging.DEBUG)
-	mLog.handlers[-1].setLevel(logging.INFO-(args.verbose or 0)*10)
+	mLog.handlers[-1].setLevel(logging.WARNING-(args.verbose or 0)*10)
 	fh = logging.FileHandler(os.path.join('build', 'tokens.log'), mode="w") # mode w will erase previous logs
 	fh.setLevel(logging.DEBUG)
 	fh.setFormatter(logging.Formatter('%(name)s : %(levelname)s : %(message)s'))
@@ -556,6 +556,7 @@ def main():
 	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('castSpell.template', 'r').read()).render()))
 	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('npcAttack.template', 'r').read()).render()))
 	addon.zipme()
+	log.warning("Done generating 1 library token: %s" % addon)
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
@@ -568,11 +569,15 @@ def main():
 	Spell.spellDB = [Spell(spell) for spell in localSpells]
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
+	cnt = 0
 	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
 		log.debug(token.verbose())
 		token.zipme()
 		sTokens.append(token)
+		if 'dft.png' in token.img.filename: log.warning(str(token))
+		cnt += 1
+	log.warning("Done generation %s tokens"%cnt)
 
 	Token.dump('build', sTokens)
 	Spell.dump('build', Spell.spellDB)
