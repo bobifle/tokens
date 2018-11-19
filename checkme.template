@@ -1,0 +1,18 @@
+<!-- Roll all Ability checks -->
+<!-- first , get all saving modifiers -->
+[h, macro("getNPCSkills@Lib:Addon5e"): 0]
+[h: skills = macro.return]
+[h: snames = json.fields(skills, "json")]
+[h: snames = json.sort(snames)]
+
+<!-- Get the attribute in the correct order and do the roll-->
+
+<div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
+	Ability checks:
+	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
+		[r, foreach(skill, snames), code: {
+			[h: modifier =  json.get(skills, skill)]
+			[skill]: [1d20 + modifier]
+		}]
+	</div>
+</div>

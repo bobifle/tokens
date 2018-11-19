@@ -424,11 +424,10 @@ class Token(Dnd5ApiObject):
 			('MaxHp', self.hit_points),
 			('Hp', self.hit_points),
 			('HitDice', self.hit_dice),
+			# TODO : move prop to Lib:Addon5e ?
 			('attributes', json.dumps(self.attributes)),
 			('Strength', self.strength),
-			#('bstr', '{floor((getProperty("Strength")-10)/2)}'),
 			('Dexterity', self.dexterity),
-			#('bdex', '{floor((getProperty("Dexterity")-10)/2)}'),
 			('Constitution', self.constitution),
 			('Wisdom', self.wisdom),
 			('Intelligence', self.intelligence),
@@ -534,7 +533,16 @@ class LibToken(Token):
 	@property
 	def macros(self): return self._macros
 	@property
-	def props(self): return []
+	def props(self): 
+		with open(r'../5e-database/5e-SRD-Ability-Scores.json', 'r') as afile:
+			data = json.load(afile)
+		all_skills = {}
+		for attribute in data:
+			for skill in attribute['skills']:
+				all_skills[skill['name']] = attribute['full_name']
+		return (Prop(name, value) for name, value in [
+			('all_skills', json.dumps(all_skills)),
+		])
 	@property
 	def spells(self): return []
 
@@ -582,6 +590,17 @@ def main():
 	[h: jskills = json.set(jskills, sname, svalue)]
 	[h: find = find - 1]
 }]
+<!-- Most of the token don't specify a modifier for all skills-->
+<!-- for all skills missing a modifier, use the default one which is the attribute modifier -->
+[h: all_skills= getLibProperty("all_skills", "Lib:Addon5e")]
+[h, foreach(skill, all_skills), code: {
+	[Attribute = json.get(all_skills, skill)]
+	[att_ = lower(substring(Attribute, 0, 3))]
+	[modifier = json.get(jskills, skill)]
+    [default_mod = getProperty("b"+att_)]
+    [no_mod = json.isEmpty(modifier) ]
+	[if (no_mod): jskills = json.set(jskills, skill , default_mod)]
+}]
 [h: macro.return = jskills]''', **params))
 	# "Wis +3, Con +2" => {"Wis": 2, "Con": 2}
 	addon.add(macros.Macro(addon, '', 'getNPCSaves', r'''[h: id = strfind(getProperty("saves"), "((\\w+) \\+(\\d+))")]
@@ -595,7 +614,7 @@ def main():
 	[h: jsaves = json.set(jsaves, sname, svalue)]
 	[h: find = find - 1]
 }]
-<!-- Most of the token don't specify a modifier for all attributes -->
+<!-- Most of the token don't specify a modifier for all saves -->
 <!-- for all saves missing a modifier, use the default one which is the attribute modifier -->
 [h, foreach(Attribute, getProperty("attributes")), code: {
 	[Att = substring(Attribute, 0, 3)]
@@ -607,6 +626,7 @@ def main():
 }]
 [h: macro.return = jsaves]''', **params))
 	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('saveme.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('checkme.template', 'r').read()).render(), **params))
 	params = {'group': 'Menu'}
 	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
 	# but is fully customizable, it's a html form
