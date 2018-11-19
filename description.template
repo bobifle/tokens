@@ -1,6 +1,5 @@
 <!--Based on Attack@lib:Melek where all PC specifics have been removed-->
 <!--Macro Arguments-->
-[h:ParentToken=json.get(macro.args,"ParentToken")]
 [h:wName=json.get(macro.args,"Name")]
 [h:wDesc=json.get(macro.args,"Description")]
 

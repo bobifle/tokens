@@ -413,6 +413,10 @@ class Token(Dnd5ApiObject):
 		return spells
 
 	@property
+	def attributes(self):
+		return ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma']
+
+	@property
 	def props(self):
 		return (Prop(name, value) for name, value in [
 			('mname', self.name),
@@ -420,13 +424,16 @@ class Token(Dnd5ApiObject):
 			('MaxHp', self.hit_points),
 			('Hp', self.hit_points),
 			('HitDice', self.hit_dice),
-			('Charisma', self.charisma),
+			('attributes', json.dumps(self.attributes)),
 			('Strength', self.strength),
+			#('bstr', '{floor((getProperty("Strength")-10)/2)}'),
 			('Dexterity', self.dexterity),
-			('Intelligence', self.intelligence),
-			('Initiative', '{Dx}'),
-			('Wisdom', self.wisdom),
+			#('bdex', '{floor((getProperty("Dexterity")-10)/2)}'),
 			('Constitution', self.constitution),
+			('Wisdom', self.wisdom),
+			('Intelligence', self.intelligence),
+			('Charisma', self.charisma),
+			('Initiative', '[h,macro("getNPCInitBonus@Lib:Addon5e"):0][r: macro.return]'),
 			('Immunities', self.immunities), # XXX add condition immunities ?
 			('Resistances', self.resistances),
 			('CreatureType', self.type + ', CR ' + str(self.challenge_rating)),
@@ -434,6 +441,7 @@ class Token(Dnd5ApiObject):
 			('Speed', self.speed),
 			('Saves', self.saves),
 			('Skills', self.skills),
+			('jSkills', '[h,macro("getNPCSkills@Lib:Addon5e"):0][r: macro.return]'),
 			('Senses', self.senses),
 			('Vulnerabilities', self.vulnerabilities),
 			('Resistances', self.resistances),
@@ -443,7 +451,9 @@ class Token(Dnd5ApiObject):
 			('Perception', self.perception),
 			('ImageName', self.img_name),
 			('SpellSlots', self.spell_slots),
-			]+ [(k, v) for k,v in self.slots.iteritems()]
+			# do ('bstr', '{floor((getProperty("Strength")-10)/2)}') for all attributes
+			] + [('b%s' % a[:3].lower(), '{floor((getProperty("%s")-10)/2)}' % a) for a in self.attributes] +
+			[(k, v) for k,v in self.slots.iteritems()]
 			)
 
 	@property
@@ -531,7 +541,7 @@ class LibToken(Token):
 	def add(self, macro): self._macros.append(macro)
 
 def main():
-	parser = argparse.ArgumentParser(description='Process some integers.')
+	parser = argparse.ArgumentParser(description='DnD 5e token builder')
 	parser.add_argument('--verbose', '-v', action='count')
 	parser.add_argument('--max-token', '-m', type=int)
 	global args
@@ -552,9 +562,58 @@ def main():
 
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
-	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('description.template', 'r').read()).render()))
-	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('castSpell.template', 'r').read()).render()))
-	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('npcAttack.template', 'r').read()).render()))
+	params = {'group': 'dnd5e'}
+	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('description.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('castSpell.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('npcAttack.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('init.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'getNPCInitBonus', '''[h, macro("getNPCSkills@Lib:Addon5e"):0]
+[h: jskills = macro.return]
+[h: initb = json.get(jskills, "Initiative")]
+[h, if (initb==""), code: {[h: initb=getProperty("bdex")]}]
+[h:macro.return=initb]''', **params))
+	# "Perception +5, Initiative +3" => {"Perception": 5, "Initiative": 3}
+	addon.add(macros.Macro(addon, '', 'getNPCSkills', r'''[h: id = strfind(getProperty("skills"), "((\\w+) \\+(\\d+))")]
+[h: jskills = json.get("{}", "")]
+[h: find = getFindCount(id)]
+[h, while (find != 0), code: {
+	[h: sname = getGroup(id, find, 2)]
+	[h: svalue = getGroup(id, find, 3)]
+	[h: jskills = json.set(jskills, sname, svalue)]
+	[h: find = find - 1]
+}]
+[h: macro.return = jskills]''', **params))
+	# "Wis +3, Con +2" => {"Wis": 2, "Con": 2}
+	addon.add(macros.Macro(addon, '', 'getNPCSaves', r'''[h: id = strfind(getProperty("saves"), "((\\w+) \\+(\\d+))")]
+[h: jsaves= json.get("{}", "")]
+[h: find = getFindCount(id)]
+<!-- parse the prop "saves" which may contain some save modifiers-->
+<!-- "Wis +3, Con +2" => "Wis": 2, "Con": 2 -->
+[h, while (find != 0), code: {
+	[h: sname = getGroup(id, find, 2)]
+	[h: svalue = getGroup(id, find, 3)]
+	[h: jsaves = json.set(jsaves, sname, svalue)]
+	[h: find = find - 1]
+}]
+<!-- Most of the token don't specify a modifier for all attributes -->
+<!-- for all saves missing a modifier, use the default one which is the attribute modifier -->
+[h, foreach(Attribute, getProperty("attributes")), code: {
+	[Att = substring(Attribute, 0, 3)]
+	[att_ = lower(Att)]
+	[modifier = json.get(jsaves, Att)]
+    [default_mod = getProperty("b"+att_)]
+    [no_mod = json.isEmpty(modifier) ]
+	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
+}]
+[h: macro.return = jsaves]''', **params))
+	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('saveme.template', 'r').read()).render(), **params))
+	params = {'group': 'Menu'}
+	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
+	# but is fully customizable, it's a html form
+	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
+	addon.add(macros.Macro(addon, '', 'Control Panel', jinja2.Template(open('cpanel.template', 'r').read()).render(), **params))
+	params = {'group': 'Debug'}
+	addon.add(macros.Macro(addon, '', 'Debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
 	addon.zipme()
 	log.warning("Done generating 1 library token: %s" % addon)
 

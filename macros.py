@@ -35,11 +35,16 @@ spellTemplate = '''
 
 class Macro(object):
 
-	def __init__(self, token, action, label, command):
+	def __init__(self, token, action, label, command, **kwargs):
 		self._command = command
 		self._label = label
 		self.token = token
 		self.action = action
+		self.tooltip = ''
+		self._group = None
+		self._bcolor = None # the background button color
+		self._fcolor = None # the font color of the macro button
+		for k,v in kwargs.iteritems(): setattr(self, k, v)
 
 	def __str__(self): return '%s<%s,grp=%s>' % (self.__class__.__name__, self.label, self.group)
 	def __repr__(self): return str(self)
@@ -53,13 +58,25 @@ class Macro(object):
 	def label(self): return self._label
 
 	@property
-	def group(self): return 'unknown'
+	def group(self): return self._group or 'unknown'
+	@group.setter
+	def group(self, v): self._group = v
 
 	@property
-	def color(self): return {'Health' : 'green', 'Action': 'black'}.get(self.group, 'black')
+	def color(self): return {'Health' : 'green', 'Action': 'black'}.get(self.group, 'black') if self._bcolor is None else self._bcolor
+	@color.setter
+	def color(self, v): self._bcolor = v
 
 	@property
-	def fontColor(self): return 'white'
+	def fontColor(self): return self._fcolor or 'white'
+	@fontColor.setter
+	def fontColor(self, v): self._fcolor = v
+
+	@property
+	def colors(self): return self.fontColor, self.color # tuple (font, bg)
+	
+	@colors.setter
+	def colors(self, fbg): self.fontColor, self.color = fbg
 
 
 class DescrMacro(Macro):
@@ -71,7 +88,7 @@ class DescrMacro(Macro):
 [macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc']))
 
 	@property
-	def group(self): return 'Misc'
+	def group(self): return self._group or 'Misc'
 
 	@property
 	def name(self): return self.action.get('name', "")
@@ -105,7 +122,7 @@ class ActionMacro(DescrMacro) :
 	"FlavorText","%s attacks!",
 	"ButtonColor","green",
 	"FontColor","white")]
-
+processorLink
 [macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, action['desc'], token.name))
 		else:
 			DescrMacro.__init__(self, token, action)
@@ -164,50 +181,49 @@ class ActionMacro(DescrMacro) :
 		return reach
 
 	@property
-	def group(self): return 'Action'
+	def group(self): return self._group or 'Action'
 
 class LairMacro(ActionMacro) : 
 	@property
-	def color(self): return 'orange'
+	def color(self): return self._bcolor or 'orange'
 	@property
-	def fontColor(self): return 'black'
+	def fontColor(self): return self._fcolor or 'black'
 	@property
-	def group(self): return 'Lair (on init 20)' 
+	def group(self): return self._group or 'Lair (on init 20)' 
 
 class RegionalEffectMacro(ActionMacro) : 
 	@property
-	def color(self): return 'blue'
+	def color(self): return self._bcolor or 'blue'
 	@property
-	def fontColor(self): return 'white'
+	def fontColor(self): return self._fcolor or 'white'
 	@property
-	def group(self): return 'Regional Effects' 
+	def group(self): return self._group or 'Regional Effects' 
 
 class LegendaryMacro(ActionMacro) : 
 	@property
-	def color(self): return 'orange'
+	def color(self): return self._bcolor or 'orange'
 	@property
-	def fontColor(self): return 'black'
+	def fontColor(self): return self._fcolor or 'black'
 	@property
-	def group(self): return 'Legendary' 
+	def group(self): return self._group or 'Legendary' 
 
 class SpecialMacro(DescrMacro):
 	@property
-	def group(self): return 'special'
+	def group(self): return self._group or 'special'
 	@property
-	def color(self): return 'maroon'
+	def color(self): return self._bcolor or 'maroon'
 
 class SpellCastingMacro(DescrMacro):
 	def __init__(self, token, spell, groupName):
-		self._group = groupName
 		DescrMacro.__init__(self, token, spell)
+		self._group = groupName
 	@property
 	def group(self): return self._group
 	@property
-	def color(self): return 'maroon'
+	def color(self): return self._bcolor or 'maroon'
 
 class SpellMacro(Macro):
 	def __init__(self, token, spell):
-		self._group = 'Level %s' % spell.level if spell.level >= 1 else 'Cantrips'
 		# not used anymore the window popping is annoying
 		#with open('spell.template') as template:
 		#	 t = jinja2.Template(template.read())
@@ -219,6 +235,7 @@ class SpellMacro(Macro):
 		suffix += ')'
 		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token))
 		self.action['description'] = '\n'.join(self.action['desc'])
+		self._group = 'Level %s' % spell.level if spell.level >= 1 else 'Cantrips'
 
 	@property
 	def group(self): return self._group
@@ -229,18 +246,13 @@ class SpellMacro(Macro):
 class SheetMacro(Macro):
 	def __init__(self, token):
 		with open('token_sheet.template') as template:
-			Macro.__init__(self, None, None, 'Sheet', template.read())
-
-	@property
-	def group(self): return 'Sheet'
-	@property
-	def color(self): return 'yellow'
-	@property
-	def fontColor(self): return 'black'
-
+			Macro.__init__(self, None, None, 'Sheet', template.read(), **{'group':"Sheet", 'colors': ('black', 'yellow'), 'tooltip': 'Display the NPC sheet'})
 
 common = [
-	SheetMacro(None)
+	SheetMacro(None),
+	Macro(None, None, 'Init', '[macro("Init@Lib:Addon5e"):0]', **{'group': 'Action', 'colors': ('white', 'green'), 'tooltip': 'Roll and add to the init panel'}),
+	Macro(None, None, 'SaveMe', '[macro("SaveMe@Lib:Addon5e"):0]', **{'group': 'Action', 'colors': ('white', 'green'), 'tooltip': 'Roll Saving Throws'}),
+	Macro(None, None, 'Debug', '[macro("Debug@Lib:Addon5e"):0]', **{'group': 'Debug', 'colors': ('white', 'black')}),
 ]
 
 def commons(token):

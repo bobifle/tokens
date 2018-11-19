@@ -1,0 +1,17 @@
+<!-- Roll all saving throws for the current token -->
+<!-- first , get all saving modifiers -->
+[h, macro("getNPCSaves@Lib:Addon5e"): 0]
+[h: saves = macro.return]
+
+<!-- Get the attribute in the correct order and do the roll-->
+
+<div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
+	Saving Throws:
+	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
+		[r, foreach(Attribute, getProperty("attributes")), code: {
+			[h: attr = substring(Attribute, 0, 3)]
+			[h: modifier =  json.get(saves, attr)]
+			[attr]: [1d20 + modifier]
+		}]
+	</div>
+</div>

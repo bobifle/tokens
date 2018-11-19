@@ -85,7 +85,7 @@
         <minWidth>90</minWidth>
         <maxWidth></maxWidth>
         <allowPlayerEdits>true</allowPlayerEdits>
-        <toolTip></toolTip>
+        <toolTip>{{macro.tooltip}}</toolTip>
         <commonMacro>false</commonMacro>
         <compareGroup>true</compareGroup>
         <compareSortPrefix>true</compareSortPrefix>
