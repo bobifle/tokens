@@ -596,7 +596,7 @@ def main():
 [h, foreach(skill, all_skills), code: {
 	[Attribute = json.get(all_skills, skill)]
 	[att_ = lower(substring(Attribute, 0, 3))]
-	[modifier = json.get(jskills, skill)]
+	[if (json.isEmpty(jskills)): modifier = json.get("{}", ""); modifier = json.get(jskills, skill)]
     [default_mod = getProperty("b"+att_)]
     [no_mod = json.isEmpty(modifier) ]
 	[if (no_mod): jskills = json.set(jskills, skill , default_mod)]
@@ -619,7 +619,7 @@ def main():
 [h, foreach(Attribute, getProperty("attributes")), code: {
 	[Att = substring(Attribute, 0, 3)]
 	[att_ = lower(Att)]
-	[modifier = json.get(jsaves, Att)]
+	[if (json.isEmpty(jsaves)): modifier = json.get("{}", ""); modifier = json.get(jsaves, Att)]
     [default_mod = getProperty("b"+att_)]
     [no_mod = json.isEmpty(modifier) ]
 	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
