@@ -1,0 +1,85 @@
+[frame("test"): {
+[R: strformat('
+<style>
+   table.btnformat {
+      padding: 1pt;
+      border-width: 1pt;
+      border-style: solid;
+      border-color: black;
+      text-align: center;
+      white-space: nowrap;
+      background-color: white;
+      border-spacing:0;
+   }
+   td.btnformat {
+      padding: 0px;
+      border-width: 1pt;
+      border-style: solid;
+      border-color: black;
+      text-align: center;
+      white-space: nowrap;
+   }
+   table.grpformat {
+      padding: 0px;
+      border-width: 0pt;
+      text-align: center;
+      white-space: nowrap;
+      background-color: black;
+   }
+   td.grpformat {
+      color: white;
+      font-weight: 700;
+      text-align: center;
+      padding:0px;
+   }
+   table.grpspace {
+      padding: 0px;
+      border-width: 0pt;
+      white-space: nowrap;
+   }
+   td.grpspace {
+      font-size: 3pt;
+      padding:0px;
+   }
+</style>
+')]
+<table width="100%" class="grpformat">
+   <tr cellpadding="0px"><td class="grpformat">Group Header</td></tr>
+</table>
+
+<table width="100%" cellpadding="1pt" class="btnformat">
+   <tr cellpadding="0px">
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+   <tr cellpadding="0px">
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+   <tr cellpadding="0px">
+      <td colspan=2><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+</table>
+
+<table width="100%" class="grpspace">
+   <tr cellpadding="0px"><td class="grpspace">&nbsp;</td></tr>
+</table>
+
+<table width="100%" class="grpformat">
+   <tr cellpadding="0px"><td class="grpformat">Group Header</td></tr>
+</table>
+
+<table width="100%" cellpadding="1pt" bgcolor="white" class="btnformat">
+   <tr cellpadding="0px">
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+   <tr cellpadding="0px">
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+   <tr cellpadding="0px">
+      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
+   </tr>
+</table>
+}] 

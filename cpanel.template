@@ -1,4 +1,0 @@
-<!--Macro Arguments-->
-[h: init = 1d20+Dex]
-[h: added = addToinitiative(0, init)]
-[r,if (added==1), code: {Adding [r: token.name] at initiative [r: init]};{[r: token.name] already in combat}]

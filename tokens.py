@@ -571,10 +571,10 @@ def main():
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
 	params = {'group': 'dnd5e'}
-	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('description.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('castSpell.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('npcAttack.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('init.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('macros/description.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('macros/castSpell.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('macros/npcAttack.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('macros/init.template', 'r').read()).render(), **params))
 	addon.add(macros.Macro(addon, '', 'getNPCInitBonus', '''[h, macro("getNPCSkills@Lib:Addon5e"):0]
 [h: jskills = macro.return]
 [h: initb = json.get(jskills, "Initiative")]
@@ -625,13 +625,13 @@ def main():
 	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
 }]
 [h: macro.return = jsaves]''', **params))
-	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('saveme.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('checkme.template', 'r').read()).render(), **params))
-	params = {'group': 'Menu'}
+	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('macros/saveme.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('macros/checkme.template', 'r').read()).render(), **params))
+	params = {'group': 'aMenu'}
 	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
 	# but is fully customizable, it's a html form
 	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
-	addon.add(macros.Macro(addon, '', 'Control Panel', jinja2.Template(open('cpanel.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Control Panel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
 	params = {'group': 'Debug'}
 	addon.add(macros.Macro(addon, '', 'Debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
 	addon.zipme()
