@@ -1,29 +1,51 @@
-# tokens
-maptool token generator
+# Tokens
 
-Generates monster tokens for maptool, provided your are using the DnD 5e 
-campaign framework from here: http://forums.rptools.net/viewtopic.php?f=85&t=25490
+Drop-in DnD 5e Tokens for maptool.
+
+These a specifically aimed at:
+* in person play
+* online play, with minimum automated management. Some players love to roll dice and track their HP
+
+These tokens won't add anything to you campaign settings, they are drop-in macros. They can be dragged into any exisiting campaign session.
+Updating them is as trivial as dragging tokens into your maptool map.
+
+If you are searching for fully automated frameworks, they are more heavy frameworks to be found on the maptool forum.
 
 ## Installation
 
-You'll need python 2.7 installed
-You'll probably need to install the module 'requests' and 'pillow'
+Extract the zip file.
+You should see:
 
-pip install requests
-pip install pillow 
+`tokens/*rptok`
+`Lib_Addon5e.rptok`
 
-on windows installing pillow is easier using the binary installer from their site.
+Copy `Lib_Addon5e.rptok` into your library map (any non player visible map), create one if you don't have any. **Rename the token "Lib:Addon5e"**,
+(depending on your Maptool options, the application may have renamed it when you dragged it).
 
-## FAQ
+Drag any token file in your maps to start using it.
 
-Why are all my tokens bears ???
+Optionaly, you can add the tokens directory to your maptool library window.
 
-Because it's the default image I used when no suitable image is found. I do not own art.
-However by editing one line in tokens.py, you can ad a directory, the script will
-try to match the name of the token with the png files in that directory.
-It way sometimes yield strange results because of the heuristic used by it will do the job
+## Known limitations
+* all macros broadcast to the GM and players alike. GM, you won't be able to fudge. I'm working on it...
+* some dragons miss their legendary/lair actions
+* as a general rule, for important NPCs, double check with the monster manual
+* tokens are not editable, not in a friendly way. Maptool restrict access to token's properties. Maybe in a future version...
 
-My tokens have almost no property, nor macro.
+## Credits
 
-Make sure you're using the dnd 5e framework, the link is above.
+* I borrowed a lot from existing frameworks (Paulstrait's, Wolf42)
+* I stole all SRD monsters data from dnd5Api.com
+* This was made possible by the active community on the Maptool forum and the discord server. Thanks for their valuable help.
+
+
+## Changelogs
+### v0.2
+* dependency to the DnD5e framework is now gone, these are now complete drop-in tokens
+* added 40+ tokens from volo's
+* fix a bug where the to-hit bonus was used instead of the damage bonus :-/
+* add rolls for ability checks
+* add rolls for saving throws
+* add an init button to auto add and set a NPC token to the init windows
+* fix a lot of issues with non ascii characters messing with the monsters sheet
 

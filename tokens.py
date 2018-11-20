@@ -26,7 +26,8 @@ import macros
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-imglib = r'c:/Users/sulay/OneDrive/RPG/maptool cmpgn/imglib'
+#imglib = r'c:/Users/Sulay/OneDrive/RPG/maptool cmpgn/imglib'
+imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
 if not os.path.exists(imglib):
 	imglib = '../imglib'
 imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo'] ]
@@ -371,7 +372,15 @@ class Token(Dnd5ApiObject):
 			spellCast = (macros.SpellCastingMacro(self, spe, groupName) for spe in self.specials if spe['name'].lower()=="spellcasting")
 		specials = (macros.SpecialMacro(self, spe) for spe in self.specials if spe['name'] and spe['name'].lower()!="spellcasting")
 		spells = (macros.SpellMacro(self, spell) for spell in self.spells)
-		return itertools.chain(actions, spellCast, specials, legends, lairs, reg, macros.commons(self), spells)
+		commons = [
+			macros.SheetMacro(self),
+			macros.Macro(self, None, 'Init', '[macro("Init@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll and add to the init panel'}),
+			macros.Macro(self, None, 'SaveMe', '[macro("SaveMe@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll Saving Throws'}),
+			macros.Macro(self, None, 'CheckMe', '[macro("CheckMe@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll Skill Checks'}),
+		]
+		if not args.delivery: 
+			commons.append(macros.Macro(self, None, 'Debug', '[macro("Debug@Lib:Addon5e"):0]', **{'group': 'zDebug', 'colors': ('white', 'black')}))
+		return itertools.chain(actions, spellCast, specials, legends, lairs, reg, commons, spells)
 
 	@property
 	def slots(self): # current spendable slots
@@ -480,7 +489,7 @@ class Token(Dnd5ApiObject):
 			if bratio > 0.8:
 				self._img = Image.open(bfpath, 'r')
 			else:
-				self._img = Image.open('dft.png', 'r')
+				self._img = Image.open(imglib+'/dft.png', 'r')
 		return self._img
 
 	@property
@@ -499,7 +508,10 @@ class Token(Dnd5ApiObject):
 
 	def zipme(self):
 		"""Zip the token into a rptok file."""
-		with zipfile.ZipFile(os.path.join('build', '%s.rptok'%(self.name.replace(":","_"))), 'w') as zipme:
+		filename = os.path.join('build', '%s.rptok'%(self.name.replace(":","_")))
+		# don't compress to avoid technical issue when sharing files
+		# the gain is very small anyway
+		with zipfile.ZipFile(filename, "w", zipfile.ZIP_STORED) as zipme:
 			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
 			zipme.writestr('properties.xml', self.properties_xml)
 			log.debug('Token image md5 %s' % self.md5)
@@ -516,6 +528,7 @@ class Token(Dnd5ApiObject):
 			out = io.BytesIO()
 			im = self.img.copy() ; im.thumbnail((500,500)) ; im.save(out, format='PNG')
 			zipme.writestr('thumbnail_large', out.getvalue())
+		return filename
 
 	def verbose(self):
 		v = "%s\n" % self
@@ -552,6 +565,7 @@ def main():
 	parser = argparse.ArgumentParser(description='DnD 5e token builder')
 	parser.add_argument('--verbose', '-v', action='count')
 	parser.add_argument('--max-token', '-m', type=int)
+	parser.add_argument('--delivery', '-d', action="store_true", default=False)
 	global args
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
@@ -582,7 +596,7 @@ def main():
 [h:macro.return=initb]''', **params))
 	# "Perception +5, Initiative +3" => {"Perception": 5, "Initiative": 3}
 	addon.add(macros.Macro(addon, '', 'getNPCSkills', r'''[h: id = strfind(getProperty("skills"), "((\\w+) \\+(\\d+))")]
-[h: jskills = json.get("{}", "")]
+[h: jskills = "{}"]
 [h: find = getFindCount(id)]
 [h, while (find != 0), code: {
 	[h: sname = getGroup(id, find, 2)]
@@ -596,7 +610,7 @@ def main():
 [h, foreach(skill, all_skills), code: {
 	[Attribute = json.get(all_skills, skill)]
 	[att_ = lower(substring(Attribute, 0, 3))]
-	[if (json.isEmpty(jskills)): modifier = json.get("{}", ""); modifier = json.get(jskills, skill)]
+	[modifier = json.get(jskills, skill)]
     [default_mod = getProperty("b"+att_)]
     [no_mod = json.isEmpty(modifier) ]
 	[if (no_mod): jskills = json.set(jskills, skill , default_mod)]
@@ -604,7 +618,7 @@ def main():
 [h: macro.return = jskills]''', **params))
 	# "Wis +3, Con +2" => {"Wis": 2, "Con": 2}
 	addon.add(macros.Macro(addon, '', 'getNPCSaves', r'''[h: id = strfind(getProperty("saves"), "((\\w+) \\+(\\d+))")]
-[h: jsaves= json.get("{}", "")]
+[h: jsaves= "{}"]
 [h: find = getFindCount(id)]
 <!-- parse the prop "saves" which may contain some save modifiers-->
 <!-- "Wis +3, Con +2" => "Wis": 2, "Con": 2 -->
@@ -619,7 +633,7 @@ def main():
 [h, foreach(Attribute, getProperty("attributes")), code: {
 	[Att = substring(Attribute, 0, 3)]
 	[att_ = lower(Att)]
-	[if (json.isEmpty(jsaves)): modifier = json.get("{}", ""); modifier = json.get(jsaves, Att)]
+	[modifier = json.get(jsaves, Att)]
     [default_mod = getProperty("b"+att_)]
     [no_mod = json.isEmpty(modifier) ]
 	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
@@ -634,7 +648,7 @@ def main():
 	addon.add(macros.Macro(addon, '', 'Control Panel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
 	params = {'group': 'Debug'}
 	addon.add(macros.Macro(addon, '', 'Debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
-	addon.zipme()
+	filename = addon.zipme()
 	log.warning("Done generating 1 library token: %s" % addon)
 
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
@@ -649,14 +663,24 @@ def main():
 
 	sTokens = [] # used for further serialization, because tokens is a generator and will be consumed
 	cnt = 0
-	for token in itertools.islice(tokens, args.max_token):
+	deliveryFilename = 'build/dnd5eTokens.zip'
+	zfile = zipfile.ZipFile(deliveryFilename, "w", zipfile.ZIP_STORED) if args.delivery else None
+	# add lib:addon5e to the zipfile
+	if zfile: 
+		zfile.write(filename, os.path.basename(filename))
+	for token in itertools.islice(tokens, args.max_token): 
 		log.info(token)
 		log.debug(token.verbose())
-		token.zipme()
+		filename = token.zipme()
+		if zfile: 
+			zfile.write(filename, os.path.join("tokens", os.path.basename(filename)))
 		sTokens.append(token)
 		if 'dft.png' in token.img.filename: log.warning(str(token))
 		cnt += 1
 	log.warning("Done generation %s tokens"%cnt)
+	if zfile:
+		zfile.close()
+		log.warning("Done writing delivery zip file '%s'" % deliveryFilename)
 
 	Token.dump('build', sTokens)
 	Spell.dump('build', Spell.spellDB)

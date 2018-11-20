@@ -122,7 +122,6 @@ class ActionMacro(DescrMacro) :
 	"FlavorText","%s attacks!",
 	"ButtonColor","green",
 	"FontColor","white")]
-processorLink
 [macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, action['desc'], token.name))
 		else:
 			DescrMacro.__init__(self, token, action)
@@ -246,18 +245,5 @@ class SpellMacro(Macro):
 class SheetMacro(Macro):
 	def __init__(self, token):
 		with open('macros/token_sheet.template') as template:
-			Macro.__init__(self, None, None, 'Sheet', template.read(), **{'group':"Sheet", 'colors': ('black', 'yellow'), 'tooltip': 'Display the NPC sheet'})
+			Macro.__init__(self, token, None, 'Sheet', template.read(), **{'group':"Sheet", 'colors': ('black', 'yellow'), 'tooltip': 'Display the NPC sheet'})
 
-common = [
-	SheetMacro(None),
-	Macro(None, None, 'Init', '[macro("Init@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll and add to the init panel'}),
-	Macro(None, None, 'SaveMe', '[macro("SaveMe@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll Saving Throws'}),
-	Macro(None, None, 'CheckMe', '[macro("CheckMe@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll Skill Checks'}),
-	Macro(None, None, 'Debug', '[macro("Debug@Lib:Addon5e"):0]', **{'group': 'zDebug', 'colors': ('white', 'black')}),
-]
-
-def commons(token):
-	for macro in common:
-		rmacro = copy.copy(macro)
-		rmacro.token = token
-		yield rmacro
