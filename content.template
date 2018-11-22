@@ -22,16 +22,18 @@
   <snapToScale>true</snapToScale>
   <width>512</width>
   <height>512</height>
+  {# fields commented out, not supported before 1.4.1.0 and not really required
   <isoWidth>512</isoWidth>
   <isoHeight>512</isoHeight>
+  <vblAlphaSensitivity>0</vblAlphaSensitivity>
+  <alwaysVisibleTolerance>0</alwaysVisibleTolerance>
+  <isAlwaysVisible>false</isAlwaysVisible>
+  #}
   <scaleX>1.0</scaleX>
   <scaleY>1.0</scaleY>
   <snapToGrid>true</snapToGrid>
   <isVisible>true</isVisible>
   <visibleOnlyToOwner>false</visibleOnlyToOwner>
-  <vblAlphaSensitivity>0</vblAlphaSensitivity>
-  <alwaysVisibleTolerance>0</alwaysVisibleTolerance>
-  <isAlwaysVisible>false</isAlwaysVisible>
   <name>{{token.name}}</name>
   <ownerType>0</ownerType>
   <tokenShape>TOP_DOWN</tokenShape>
