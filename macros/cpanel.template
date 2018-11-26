@@ -1,85 +1,28 @@
-[frame("test"): {
-[R: strformat('
-<style>
-   table.btnformat {
-      padding: 1pt;
-      border-width: 1pt;
-      border-style: solid;
-      border-color: black;
-      text-align: center;
-      white-space: nowrap;
-      background-color: white;
-      border-spacing:0;
-   }
-   td.btnformat {
-      padding: 0px;
-      border-width: 1pt;
-      border-style: solid;
-      border-color: black;
-      text-align: center;
-      white-space: nowrap;
-   }
-   table.grpformat {
-      padding: 0px;
-      border-width: 0pt;
-      text-align: center;
-      white-space: nowrap;
-      background-color: black;
-   }
-   td.grpformat {
-      color: white;
-      font-weight: 700;
-      text-align: center;
-      padding:0px;
-   }
-   table.grpspace {
-      padding: 0px;
-      border-width: 0pt;
-      white-space: nowrap;
-   }
-   td.grpspace {
-      font-size: 3pt;
-      padding:0px;
-   }
-</style>
-')]
-<table width="100%" class="grpformat">
-   <tr cellpadding="0px"><td class="grpformat">Group Header</td></tr>
-</table>
+[h: macroGroup	=	"<table width=100% cellpadding=0 cellspacing='1' color='white' bgcolor='black'><td align=center><b>%{groupTitle}</b></td></table>" + 
+					"<table width=100% cellpadding=0 cellspacing='1' bgcolor='black'>" +
+					"<table width=100% cellpadding=1 cellspacing='1' bgcolor='#e5e5cc'>" +
+					"<table width=100%><tr>"
+]
+[h: macroNewLine	= "</tr></table><table width=100%><tr>"]
+[h: macroGroupEnd	= "</tr></table></table></table></tr></td><tr></tr><tr><td>"]
 
-<table width="100%" cellpadding="1pt" class="btnformat">
-   <tr cellpadding="0px">
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-   <tr cellpadding="0px">
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-   <tr cellpadding="0px">
-      <td colspan=2><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-</table>
+<html><body bgcolor="#e5e5cc" style="font-size:8.5px; text-align:center">
+<table width="100%" cellpadding="1" cellspacing="1"><tr><td>
+	<table width="100%"><tr><td bgColor = "#e5e5cc" align="center">
+		<span color="black"	style="text-decoration:none">[r:macroLink("<b>Setup</b>" ,"cpanel@this","none")]</span>
+		</td><td bgColor = "#c5c5ac" align="center">
+		<span color="gray"	style="text-decoration:none">[r:macroLink("<b>Setup</b>" ,"cpanel@this","none")]</span>
+	</td></tr></table>
+	</td></tr><tr><td>
 
-<table width="100%" class="grpspace">
-   <tr cellpadding="0px"><td class="grpspace">&nbsp;</td></tr>
-</table>
-
-<table width="100%" class="grpformat">
-   <tr cellpadding="0px"><td class="grpformat">Group Header</td></tr>
-</table>
-
-<table width="100%" cellpadding="1pt" bgcolor="white" class="btnformat">
-   <tr cellpadding="0px">
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-   <tr cellpadding="0px">
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-   <tr cellpadding="0px">
-      <td><table width="100%"><tr><td class="btnformat">Button 1</td></td></table></td>
-   </tr>
-</table>
-}] 
+[h: buttons = "['Configure']"]
+[r, if(listCount(buttons)), CODE:{
+	[h:groupTitle	= "Common"]
+	[r:strformat(macroGroup)]
+	[r,foreach(btn, buttons, ""), code:{
+		[h: options = json.append("['100', 'blue', 'white', ]", btn, btn)]
+		[r, macro("HTMLMacroButton@this"):options]
+		[r: macroNewLine]
+		}]
+	[r:macroGroupEnd]
+};{}]

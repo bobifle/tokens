@@ -298,45 +298,6 @@ class Token(Dnd5ApiObject):
 	def saves(self): return self.js.get('saves', "")
 
 	@property
-	def extracted_saves(self):
-		# extract all saves from "Saving Throws Int +5, Wis +5, Cha +4"
-		extract = {}
-		if self.saves == "": return extract
-		for key, pattern in [
-				('wisdom', r'Wis \+(\d+)'),
-				('charisma', r'Cha \+(\d+)'),
-				('strength', r'Str \+(\d+)'),
-				('dexterity', r'Dex \+(\d+)'),
-				('constitution', r'Con \+(\d+)'),
-				('intelligence', r'Int \+(\d+)'),
-				]:
-			match = re.search(pattern, self.saves)
-			if match: extract[key] = int(match.group(1))
-		return extract
-
-	# fetch the wisdom save using in that order:
-	# the "wisdom_save" field value from json
-	# the value extracted from the json field "saves"
-	# the computed value attribute bonus
-	@property
-	def strength_save(self): return self.js.get('strength_save', self.extracted_saves.get('strength', self.bwis))
-
-	@property
-	def dexterity_save(self): return self.js.get('dexterity_save', self.extracted_saves.get('dexterity', self.bwis))
-
-	@property
-	def constitution_save(self): return self.js.get('constitution_save', self.extracted_saves.get('constitution', self.bcon))
-
-	@property
-	def intelligence_save(self): return self.js.get('intelligence_save', self.extracted_saves.get('intelligence', self.bcon))
-
-	@property
-	def wisdom_save(self): return self.js.get('wisdom_save', self.extracted_saves.get('wisdom', self.bwis))
-
-	@property
-	def charisma_save(self): return self.js.get('charisma_save', self.extracted_saves.get('charisma', self.bwis))
-
-	@property
 	def note(self): return ''
 
 	@property
@@ -433,8 +394,6 @@ class Token(Dnd5ApiObject):
 			('MaxHp', self.hit_points),
 			('Hp', self.hit_points),
 			('HitDice', self.hit_dice),
-			# TODO : move prop to Lib:Addon5e ?
-			('attributes', json.dumps(self.attributes)),
 			('Strength', self.strength),
 			('Dexterity', self.dexterity),
 			('Constitution', self.constitution),
@@ -454,7 +413,6 @@ class Token(Dnd5ApiObject):
 			('Vulnerabilities', self.vulnerabilities),
 			('Resistances', self.resistances),
 			('Immunities', self.immunities),
-			('WisdomSave', self.wisdom_save),
 			('Languages', self.languages),
 			('Perception', self.perception),
 			('ImageName', self.img_name),
@@ -555,6 +513,7 @@ class LibToken(Token):
 				all_skills[skill['name']] = attribute['full_name']
 		return (Prop(name, value) for name, value in [
 			('all_skills', json.dumps(all_skills)),
+			('attributes', json.dumps(self.attributes)),
 		])
 	@property
 	def spells(self): return []
@@ -630,7 +589,7 @@ def main():
 }]
 <!-- Most of the token don't specify a modifier for all saves -->
 <!-- for all saves missing a modifier, use the default one which is the attribute modifier -->
-[h, foreach(Attribute, getProperty("attributes")), code: {
+[h, foreach(Attribute, getLibProperty("attributes", "Lib:Addon5e")), code: {
 	[Att = substring(Attribute, 0, 3)]
 	[att_ = lower(Att)]
 	[modifier = json.get(jsaves, Att)]
@@ -645,9 +604,31 @@ def main():
 	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
 	# but is fully customizable, it's a html form
 	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
-	addon.add(macros.Macro(addon, '', 'Control Panel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'ControlPanel', '''[dialog("A5e Panel", "width=215; height=700; temporary=0; input=1"): {[r,macro("cpanel@this"):0]}]''', **params))
 	params = {'group': 'Debug'}
 	addon.add(macros.Macro(addon, '', 'Debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
+	params = {'group': 'Format'}
+	addon.add(macros.Macro(addon, '', 'cpanel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'HTMLMacroButton','''[h:bgColor	= arg(1)]
+[h,if(argCount() > 5): shadow = arg(5); shadow = "")]
+[h,if(argCount() > 6): toolTip = arg(6); toolTip = "")]
+[h,if(argCount() > 7): args = arg(7); args = "[]")]
+[h,if(argCount() > 8): libType = arg(8); libType = "@this")]
+[h,if(argCount() > 9): output = arg(9); output = "none")]
+
+[h:btnformat	= strformat("padding:1px; border-width:1pt; border-style:solid; border-color:black; text-align:center; white-space:nowrap; background-image:url(%{shadow}); background-color:%{bgColor};")]
+ 
+<td width='[r:arg(0)]%'>
+	<table width='100%' cellpadding='0' cellspacing='0'>
+		<tr>
+			<td style='[r:btnformat]'>
+				<span title='[r:toolTip]' style='text-decoration:none; color:[r:arg(2)]'>
+					[r:macroLink(arg(3),arg(4)+libType,output,args)]
+				</span>
+			</td>
+		</tr>
+	</table>
+</td>''' , **params))
 	filename = addon.zipme()
 	log.warning("Done generating 1 library token: %s" % addon)
 
