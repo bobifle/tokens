@@ -39,7 +39,7 @@
   <tokenShape>TOP_DOWN</tokenShape>
   <tokenType>NPC</tokenType>
   <layer>TOKEN</layer>
-  <propertyType>NPC</propertyType>
+  <propertyType>Basic</propertyType>
   <isFlippedX>false</isFlippedX>
   <isFlippedY>false</isFlippedY>
   <sightType>Normal</sightType>
