@@ -543,6 +543,33 @@ def main():
 
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
+	params = {'group': 'zLib', 'prefix': 'a5e'}
+	addon.add(macros.Macro(addon, '', 'OnCampaignLoad', '''
+[h: defineFunction( "%(prefix)s.jget", "jget@this" )]
+[h: defineFunction( "%(prefix)s.debug", "debug@this" )]
+''' % params, **params))
+	addon.add(macros.Macro(addon, '', 'debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
+	addon.add(macros.Macro(addon, '', 'jget', '''
+[h: '<!-- Like json.get, but will adapt if the requested reference cannot be made.  By default, returns 0, or returns a default named (as a third parameter). -->']
+
+[h: object = arg(0)]
+[h: key = arg(1)]
+[h, if( argCount() > 2 ): default = arg(2); default = 0]
+
+[h, if( json.type( object ) == "OBJECT" ), code:
+{
+	[h: macro.return = if( json.contains( object, key ), json.get( object, key ), default )]
+};{
+	[if( json.type( object ) == "ARRAY" && isNumber( key ) ), code:
+	{
+		[h, if( json.length( object ) > key ): 
+			macro.return = json.get( object, key ) ;
+			macro.return = default )]
+	};{
+		[h: macro.return = default ]
+	}]
+}]
+''', **params))
 	params = {'group': 'dnd5e'}
 	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('macros/description.template', 'r').read()).render(), **params))
 	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('macros/castSpell.template', 'r').read()).render(), **params))
@@ -605,8 +632,6 @@ def main():
 	# but is fully customizable, it's a html form
 	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
 	addon.add(macros.Macro(addon, '', 'ControlPanel', '''[dialog("A5e Panel", "width=215; height=700; temporary=0; input=1"): {[r,macro("cpanel@this"):0]}]''', **params))
-	params = {'group': 'Debug'}
-	addon.add(macros.Macro(addon, '', 'Debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
 	params = {'group': 'Format'}
 	addon.add(macros.Macro(addon, '', 'cpanel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
 	addon.add(macros.Macro(addon, '', 'HTMLMacroButton','''[h:bgColor	= arg(1)]

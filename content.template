@@ -86,7 +86,7 @@
         <fontSize>1.00em</fontSize>
         <minWidth>90</minWidth>
         <maxWidth></maxWidth>
-        <allowPlayerEdits>true</allowPlayerEdits>
+        <allowPlayerEdits>false</allowPlayerEdits>
         <toolTip>{{macro.tooltip}}</toolTip>
         <commonMacro>false</commonMacro>
         <compareGroup>true</compareGroup>
