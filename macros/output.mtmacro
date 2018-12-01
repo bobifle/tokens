@@ -1,0 +1,95 @@
+<!-- output.basic(chatText,targets,token): output to chat
+	NOTE: Because of the new way isGM works, this only works in B91.
+	
+   chatText - html text you want displayed to chat
+   targets - (default to all) A list or json of player names and/or groups who will see chatText.
+      * all - all players (keywords are case sensitive) 
+      * owner - anyone who owns the token. token must be valid and on current map
+      * other - anyone who doesn't own token. token must be valid and on current map
+      * gm - only gm players
+      * -gm - anyone but the gm
+      * self - only displayed to self
+      * -self - display to all other players
+      (Note: when posting multiple versions of the same output, using owner and other is most common)
+   token - (default is currentToken) Specify owned token to post as. If currentToken is valid, but "" is passed, then chatText
+      is posted as the player.
+
+Example Call:
+   xx.lib.output.basic(ownerChatText,"owner")
+   (note: xx.lib. is defined in onCampaignLoad, output.basic is name of macro, xx.lib.output.basic is name of function)
+
+   This function will post html text in a similar fashion as the normal output but the players name appears as a tooltip to the 
+	   impersonated token. By default, onCampaignLoad functions block all output and this function will post output to chat.
+-->
+
+[H: chatText = arg(0)]
+[H, if(argCount() >= 2): targets = arg(1); targets = "all"]
+[H, if(argCount() >= 3): token = arg(2); token = currentToken()]
+
+<!-- validate token is on current map -->
+[H: tokenId = findToken(token)]
+[H, if(! json.isEmpty(tokenId)), code: {
+   [H: tokenName = getName(tokenId)]
+   [H: tokenImage = getImage(tokenName)]
+};{}]
+
+<!-- parse list of targets in to list of players names -->
+[H, if(json.type(targets) == "UNKNOWN"): targets = json.fromList(targets)]
+
+<!-- get player groups -->
+[H: players.all = getAllPlayerNames("json")]
+[H: players.gm = "[]"]
+[H, foreach(player,players.all), if(isGM(player)): players.gm = json.append(players.gm,player)]
+[H: players.self = json.append("",getPlayerName())]
+[H, if(json.isEmpty(tokenId)), code: {
+	[H: players.owner = json.union(players.gm,players.self)]
+	[H: players.other = json.difference(players.all,players.owner)]
+};{
+	[H, if(isOwnedByAll(tokenId)), code: {
+		[H: players.owner = players.all]
+		[H: players.other = "[]"]
+	};{
+		[H: players.owner = getOwners("json",tokenId)]
+		[H: players.other = json.difference(players.all,players.owner)]
+	}]
+}]
+
+<!-- get player names based on groups -->
+[H: targetNames = "[]"]
+[H, if(json.isEmpty(targets)), code: {
+	[H: targetNames = players.all]
+};{
+	[H, if(json.contains(targets,"all")): targetNames = json.union(targetNames,players.all)]
+	[H, if(json.contains(targets,"gm")): targetNames = json.union(targetNames,players.gm)]
+	[H, if(json.contains(targets,"self")): targetNames = json.union(targetNames,players.self)]
+	[H, if(json.contains(targets,"owner")): targetNames = json.union(targetNames,players.owner)]
+	[H, if(json.contains(targets,"other")): targetNames = json.union(targetNames,players.other)]
+	[H, if(json.contains(targets,"-gm")): targetNames = json.difference(targetNames,players.gm)]
+	[H, if(json.contains(targets,"-self")): targetNames = json.difference(targetNames,player.self)]
+	[H: targets = json.difference(targets,json.append("","all","gm","self","owner","other","-gm","-self"))]
+	[H, if(! json.isEmpty(targets)): targetNames = json.intersection(players.all,json.union(targetNames,targets))]
+}]
+
+<!-- if original targets parameter is blank then output is to all, but if blank after getting groups, then no output -->
+[H, if(! json.isEmpty(chatText) && ! json.isEmpty(targetNames)), code: {
+   [H: playerName = replace(getPlayerName(),'"',"&quot;")]
+   [H, if(json.isEmpty(tokenId)), code: {
+      [H: output = strformat('
+         <table cellpadding="0">
+            <tr>
+               <td style="margin-right: 5px;font-weight:700;" valign="top">%{playerName}:</td>
+               <td valign="top"><span>%{chatText}</span></td>
+            </tr>
+         </table>')]
+   };{
+      [H: output = strformat('
+         <table cellpadding="0">
+            <tr>
+               <td width="40" style="padding-right: 5px" valign="top"><img src="%{tokenImage}-40" alt="%{playerName}" /></td>
+               <td style="margin-right: 5px;font-weight:700;" valign="top">%{tokenName}:</td>
+               <td valign="top"><span>%{chatText}</span></td>
+            </tr>
+         </table>')]
+   }]
+   [H: broadcast(output,targetNames,"json")]
+};{}]

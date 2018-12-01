@@ -543,12 +543,17 @@ def main():
 
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
+	fromFile = lambda path: jinja2.Template(open(path, 'r').read()).render()
 	params = {'group': 'zLib', 'prefix': 'a5e'}
-	addon.add(macros.Macro(addon, '', 'OnCampaignLoad', '''
+	addon.add(macros.Macro(addon, '', 'onCampaignLoad', '''
 [h: defineFunction( "%(prefix)s.jget", "jget@this" )]
 [h: defineFunction( "%(prefix)s.debug", "debug@this" )]
+[h: defineFunction( "%(prefix)s.output", "output@this" )]
+[h: defineFunction( "%(prefix)s.rollDice", "rollDice@this",0,0)]
 ''' % params, **params))
 	addon.add(macros.Macro(addon, '', 'debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
+	addon.add(macros.Macro(addon, '', 'output', fromFile("macros/output.mtmacro"), **params))
+	addon.add(macros.Macro(addon, '', 'rollDice', fromFile("macros/rollDice.mtmacro"), **params))
 	addon.add(macros.Macro(addon, '', 'jget', '''
 [h: '<!-- Like json.get, but will adapt if the requested reference cannot be made.  By default, returns 0, or returns a default named (as a third parameter). -->']
 

@@ -1,0 +1,10 @@
+<!-- rollDice(numDice,sides): result (hidden: dice.tooltip) -->
+[h: dice.num = arg(0)]
+[h: dice.sides = arg(1)]
+[h: dice.mod = arg(2)]
+[h: dice.rolls = ""]
+[h, count(dice.num): dice.rolls = listAppend(dice.rolls,roll(1,dice.sides))]
+[h: dice.roll = eval(strformat("sum(%{dice.rolls})"))]
+[h: dice.result = dice.roll + dice.mod]
+[h: dice.tooltip = strformat('<span title="<html><b>%{dice.num}d%{dice.sides} :</b> %{dice.rolls} + %{dice.mod}</html>">%{dice.result}</span>')]
+[h: macro.return = dice.result]
