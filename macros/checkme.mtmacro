@@ -1,13 +1,11 @@
 [h: "<!-- Roll all Ability checks -->"]
-[h: "<!-- first , get all saving modifiers -->"]
+[h: "<!-- first , get all skill modifiers -->"]
 [h, macro("getNPCSkills@Lib:Addon5e"): 0]
 [h: skills = macro.return]
 [h: snames = json.fields(skills, "json")]
 [h: snames = json.sort(snames)]
 
-[h: "<!-- Get the attribute in the correct order and do the roll-->"]
-
-[h: foo= evalMacro('
+[h: html = evalMacro('
 <div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
 	Ability checks:
 	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
@@ -18,4 +16,4 @@
 	</div>
 </div>
 ')]
-[h: a5e.output(foo)]
+[h: a5e.output(html)]

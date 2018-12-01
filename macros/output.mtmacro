@@ -23,7 +23,7 @@ Example Call:
 -->
 
 [H: chatText = arg(0)]
-[H, if(argCount() >= 2): targets = arg(1); targets = "all"]
+[H, if(argCount() >= 2): targets = arg(1); targets = getLibProperty("oTargets", "Lib:Addon5e")]
 [H, if(argCount() >= 3): token = arg(2); token = currentToken()]
 
 <!-- validate token is on current map -->

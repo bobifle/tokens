@@ -1,4 +1,7 @@
-<!--Macro Arguments-->
 [h: init = 1d20+getProperty("Initiative")]
 [h: added = addToinitiative(0, init)]
-[r,if (added==1), code: {Adding [r: token.name] at initiative [r: init] (1d20 + [getProperty("Initiative")])};{[r: token.name] already in combat}]
+
+[h: html= evalMacro('
+[r,if (added==1), code: {Adding [r: token.name] at initiative [r: init] };{[r: token.name] already in combat}]
+')]
+[h: a5e.output(html)]

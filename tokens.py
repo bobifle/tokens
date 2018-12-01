@@ -514,6 +514,7 @@ class LibToken(Token):
 		return (Prop(name, value) for name, value in [
 			('all_skills', json.dumps(all_skills)),
 			('attributes', json.dumps(self.attributes)),
+			('oTargets', "self"),
 		])
 	@property
 	def spells(self): return []

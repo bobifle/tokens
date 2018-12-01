@@ -1,17 +1,20 @@
-<!-- Roll all saving throws for the current token -->
-<!-- first , get all saving modifiers -->
+[h: "<!-- Roll all saving throws for the current token -->"]
+[h: "<!-- first , get all saving modifiers -->"]
 [h, macro("getNPCSaves@Lib:Addon5e"): 0]
 [h: saves = macro.return]
 
-<!-- Get the attribute in the correct order and do the roll-->
+[h: "<!-- Get the attribute in the correct order and do the roll-->"]
 
+[h: html = evalMacro('
 <div style="background-color: #444444; color: #FFFFFF; padding-top:2px; padding-bottom:5px; padding-left:8px; padding-right:8px;">
 	Saving Throws:
 	<div style="background-color:#FFFFFF; color: #000000; padding:2px;">
 		[r, foreach(Attribute, getLibProperty("attributes","Lib:Addon5e")), code: {
 			[h: attr = substring(Attribute, 0, 3)]
 			[h: modifier =  json.get(saves, attr)]
-			[attr]: [1d20 + modifier]
+			[r:attr]: [h: a5e.rollDice(1, 20, modifier)] [r: dice.tooltip]
 		}]
 	</div>
 </div>
+')]
+[h: a5e.output(html)]
