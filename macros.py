@@ -244,6 +244,6 @@ class SpellMacro(Macro):
 
 class SheetMacro(Macro):
 	def __init__(self, token):
-		with open('macros/token_sheet.template') as template:
+		with open('macros/token_sheet.mtmacro') as template:
 			Macro.__init__(self, token, None, 'Sheet', template.read(), **{'group':"Sheet", 'colors': ('black', 'yellow'), 'tooltip': 'Display the NPC sheet'})
 

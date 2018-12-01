@@ -576,10 +576,10 @@ def main():
 }]
 ''', **params))
 	params = {'group': 'dnd5e'}
-	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('macros/description.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('macros/castSpell.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('macros/npcAttack.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('macros/init.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('macros/description.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('macros/castSpell.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('macros/npcAttack.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('macros/init.mtmacro', 'r').read()).render(), **params))
 	addon.add(macros.Macro(addon, '', 'getNPCInitBonus', '''[h, macro("getNPCSkills@Lib:Addon5e"):0]
 [h: jskills = macro.return]
 [h: initb = json.get(jskills, "Initiative")]
@@ -630,15 +630,15 @@ def main():
 	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
 }]
 [h: macro.return = jsaves]''', **params))
-	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('macros/saveme.template', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('macros/checkme.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('macros/saveme.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('macros/checkme.mtmacro', 'r').read()).render(), **params))
 	params = {'group': 'aMenu'}
 	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
 	# but is fully customizable, it's a html form
 	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
 	addon.add(macros.Macro(addon, '', 'ControlPanel', '''[dialog("A5e Panel", "width=215; height=700; temporary=0; input=1"): {[r,macro("cpanel@this"):0]}]''', **params))
 	params = {'group': 'Format'}
-	addon.add(macros.Macro(addon, '', 'cpanel', jinja2.Template(open('macros/cpanel.template', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'cpanel', jinja2.Template(open('macros/cpanel.mtmacro', 'r').read()).render(), **params))
 	addon.add(macros.Macro(addon, '', 'HTMLMacroButton','''[h:bgColor	= arg(1)]
 [h,if(argCount() > 5): shadow = arg(5); shadow = "")]
 [h,if(argCount() > 6): toolTip = arg(6); toolTip = "")]
