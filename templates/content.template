@@ -11,8 +11,8 @@
       </net.rptools.lib.MD5Key>
     </entry>
   </imageAssetMap>
-  <x>400</x>
-  <y>400</y>
+  <x>{{token.x}}</x>
+  <y>{{token.y}}</y>
   <z>450400</z>
   <anchorX>0</anchorX>
   <anchorY>0</anchorY>

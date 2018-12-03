@@ -26,15 +26,15 @@
 <!--- Dialogue --->
 
 [h:LevelOptions=
-	if(sLevel<=1,if(json.get(slots,"1")>0,"1,",""),"")
-	+if(sLevel<=2,if(json.get(slots,"2")>0,"2,",""),"")
-	+if(sLevel<=3,if(json.get(slots,"3")>0,"3,",""),"")
-	+if(sLevel<=4,if(json.get(slots,"4")>0,"4,",""),"")
-	+if(sLevel<=5,if(json.get(slots,"5")>0,"5,",""),"")
-	+if(sLevel<=6,if(json.get(slots,"6")>0,"6,",""),"")
-	+if(sLevel<=7,if(json.get(slots,"7")>0,"7,",""),"")
-	+if(sLevel<=8,if(json.get(slots,"8")>0,"8,",""),"")
-	+if(sLevel<=9,if(json.get(slots,"9")>0,"9,",""),"")
+	if(sLevel<=1,if(a5e.jget(slots,"1",0)>0,"1,",""),"")
+	+if(sLevel<=2,if(a5e.jget(slots,"2",0)>0,"2,",""),"")
+	+if(sLevel<=3,if(a5e.jget(slots,"3",0)>0,"3,",""),"")
+	+if(sLevel<=4,if(a5e.jget(slots,"4",0)>0,"4,",""),"")
+	+if(sLevel<=5,if(a5e.jget(slots,"5",0)>0,"5,",""),"")
+	+if(sLevel<=6,if(a5e.jget(slots,"6",0)>0,"6,",""),"")
+	+if(sLevel<=7,if(a5e.jget(slots,"7",0)>0,"7,",""),"")
+	+if(sLevel<=8,if(a5e.jget(slots,"8",0)>0,"8,",""),"")
+	+if(sLevel<=9,if(a5e.jget(slots,"9",0)>0,"9,",""),"")
 ]
 
 {# Jinja2 comment, concentration state currently not supported outside the dnd framework
@@ -60,16 +60,16 @@
 [h,switch(sLevel),code:
 	case "Ritual": {[BorderColor="#93160D"][TextColor="#FFFFFF"][eLevel=0]};
 	case "0": {[BorderColor="#93160D"][TextColor="#FFFFFF"][eLevel=0]};
-	case "1": {[BorderColor="#fd2a19"][TextColor="#FFFFFF"][eLevel=1][slots=json.set(slots,"1",json.get(slots,"1")-1)]};
-	case "2": {[BorderColor="#f7ae27"][TextColor="#000000"][eLevel=2][slots=json.set(slots,"2",json.get(slots,"2")-1)]};
-	case "3": {[BorderColor="#fcf734"][TextColor="#000000"][eLevel=3][slots=json.set(slots,"3",json.get(slots,"3")-1)]};
-	case "4": {[BorderColor="#c3f130"][TextColor="#000000"][eLevel=4][slots=json.set(slots,"4",json.get(slots,"4")-1)]};
-	case "5": {[BorderColor="#008c14"][TextColor="#FFFFFF"][eLevel=5][slots=json.set(slots,"5",json.get(slots,"5")-1)]};
-	case "6": {[BorderColor="#103ffb"][TextColor="#FFFFFF"][eLevel=6][slots=json.set(slots,"6",json.get(slots,"6")-1)]};
-	case "7": {[BorderColor="#052090"][TextColor="#FFFFFF"][eLevel=7][slots=json.set(slots,"7",json.get(slots,"7")-1)]};
-	case "8": {[BorderColor="#8e268c"][TextColor="#FFFFFF"][eLevel=8][slots=json.set(slots,"8",json.get(slots,"8")-1)]};
-	case "9": {[BorderColor="#f84af4"][TextColor="#FFFFFF"][eLevel=9][slots=json.set(slots,"9",json.get(slots,"9")-1)]};
-	case "W": {[BorderColor="#000000"][TextColor="#FFFFFF"][eLevel=WSpellLevel][slots=json.set(slots,"W",json.get(slots,"W")-1)]};
+	case "1": {[BorderColor="#fd2a19"][TextColor="#FFFFFF"][eLevel=1][slots=json.set(slots,"1",a5e.jget(slots,"1",1)-1)]};
+	case "2": {[BorderColor="#f7ae27"][TextColor="#000000"][eLevel=2][slots=json.set(slots,"2",a5e.jget(slots,"2",1)-1)]};
+	case "3": {[BorderColor="#fcf734"][TextColor="#000000"][eLevel=3][slots=json.set(slots,"3",a5e.jget(slots,"3",1)-1)]};
+	case "4": {[BorderColor="#c3f130"][TextColor="#000000"][eLevel=4][slots=json.set(slots,"4",a5e.jget(slots,"4",1)-1)]};
+	case "5": {[BorderColor="#008c14"][TextColor="#FFFFFF"][eLevel=5][slots=json.set(slots,"5",a5e.jget(slots,"5",1)-1)]};
+	case "6": {[BorderColor="#103ffb"][TextColor="#FFFFFF"][eLevel=6][slots=json.set(slots,"6",a5e.jget(slots,"6",1)-1)]};
+	case "7": {[BorderColor="#052090"][TextColor="#FFFFFF"][eLevel=7][slots=json.set(slots,"7",a5e.jget(slots,"7",1)-1)]};
+	case "8": {[BorderColor="#8e268c"][TextColor="#FFFFFF"][eLevel=8][slots=json.set(slots,"8",a5e.jget(slots,"8",1)-1)]};
+	case "9": {[BorderColor="#f84af4"][TextColor="#FFFFFF"][eLevel=9][slots=json.set(slots,"9",a5e.jget(slots,"9",1)-1)]};
+	case "W": {[BorderColor="#000000"][TextColor="#FFFFFF"][eLevel=WSpellLevel][slots=json.set(slots,"W",a5e.jget(slots,"W",1)-1)]};
 	case "MA": {[BorderColor="#000000"][TextColor="#FFFFFF"][eLevel=sLevel][MysticArcanum=json.set(MysticArcanum,sLevel,0)]};
 	case "Free": {[BorderColor="02f5f6"][TextColor="#000000"][eLevel=-1]}
 ]

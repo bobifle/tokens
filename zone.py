@@ -29,15 +29,13 @@ class Zone(object):
 
 	def build(self, tokens):
 		"""Build a campaign given the tokens, properties all json data."""
-		offsets = {"PC": (100,400,50), "Lib": (200, 50,150), "NPC":(100,500,50)}
-		by_type = lambda token_list, _type: (t for t in token_list if t.type==_type)
+		offsets = {"Lib": (50, 50,150), "tiny":(50,150,50), "small": (50,200,50), "medium": (50,250,50), "large":(50,300,100), "huge": (50,400,150), "gargantuan": (50,550,200)}
+		by_type = lambda token_list, _type: (t for t in token_list if ("Lib" if t.type=="Lib" else t.size.lower())==_type)
 		for _type in offsets:
 			for index, tok in enumerate(by_type(tokens, _type)):
 				x,y,xscale = offsets[_type]
-				line = index/20
-				col = index%20
-				tok.x = x + (col)*xscale
-				tok.y = y + line*100
+				tok.x = x + (index)*xscale
+				tok.y = y 
 				log.debug("Placing %s at x=%s y=%s" % (tok, tok.x, tok.y))
 		#main_scene = Map()
 		#main_scene.name = 'empty_page_blue'

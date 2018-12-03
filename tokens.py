@@ -24,7 +24,7 @@ from PIL import Image
 import macros
 from util import Img, jenv, guid
 from zone import Zone
-from cmpgn import Campaign
+from cmpgn import Campaign, PSet
 
 log = logging.getLogger()
 
@@ -64,7 +64,7 @@ class Prop(object):
           <value class="string">{{prop.value}}</value>
           <outer-class reference="../../../.."/>
         </net.rptools.CaseInsensitiveHashMap_-KeyValue>
-      </entry>''').render(prop=self)
+      </entry>''').render(prop=self).encode("utf-8")
 
 class Dnd5ApiObject(object):
 	sfile_name = 'nofile.pickle' # filename used for serialization
@@ -175,6 +175,7 @@ class Token(Dnd5ApiObject):
 	def __init__(self, js):
 		self.js = js
 		self.assets = {}
+		self.x, self.y = 0, 0
 		# for cached properties
 		self._guid = self.sentinel
 		self._md5 = self.sentinel
@@ -204,16 +205,11 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def content_xml(self):
-		with open('content.template') as template:
-			t = jinja2.Template(template.read())
-		content = t.render(token=self)
-		return content or ''
+		return jenv().get_template('content.template').render(token=self).encode("utf-8") or ''
 
 	@property
 	def properties_xml(self):
-		with open('properties.template') as template:
-			 t = jinja2.Template(template.read())
-			 return t.render()
+		return jenv().get_template('properties.template').render().encode("utf-8")
 	
 	def render(self): return self.content_xml
 
@@ -463,12 +459,12 @@ class Token(Dnd5ApiObject):
 		# don't compress to avoid technical issue when sharing files
 		# the gain is very small anyway
 		with zipfile.ZipFile(filename, "w", zipfile.ZIP_STORED) as zipme:
-			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
+			zipme.writestr('content.xml', self.content_xml)
 			zipme.writestr('properties.xml', self.properties_xml)
 			log.debug('Token image md5 %s' % self.md5)
 			# default image for the token, right now it's a brown bear
 			# zip the xml file named with the md5 containing the asset properties
-			zipme.writestr('assets/%s' % self.md5, jenv().get_template('md5.template').render(name=self.name, extension='png', md5=self.md5))
+			zipme.writestr('assets/%s' % self.md5, jenv().get_template('md5.template').render(name=self.name, extension='png', md5=self.md5).encode("utf-8"))
 			# zip the img itself
 			zipme.writestr('assets/%s.png' % self.md5, self.img.bytes)
 			# build thumbnails
@@ -548,7 +544,7 @@ def main():
 
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
-	fromFile = lambda path: jinja2.Template(open(path, 'r').read()).render()
+	fromFile = lambda path: jenv().get_template(path).render().encode("utf-8")
 	params = {'group': 'zLib', 'prefix': 'a5e'}
 	addon.add(macros.Macro(addon, '', 'onCampaignLoad', '''
 [h: defineFunction( "%(prefix)s.jget", "jget@this" )]
@@ -557,8 +553,8 @@ def main():
 [h: defineFunction( "%(prefix)s.rollDice", "rollDice@this",0,0)]
 ''' % params, **params))
 	addon.add(macros.Macro(addon, '', 'debug', '''[h: props = getPropertyNames()] [foreach(name, props, "<br>"), code: { [name]: [getProperty(name)]: [getRawProperty(name)]}] ''', **params))
-	addon.add(macros.Macro(addon, '', 'output', fromFile("macros/output.mtmacro"), **params))
-	addon.add(macros.Macro(addon, '', 'rollDice', fromFile("macros/rollDice.mtmacro"), **params))
+	addon.add(macros.Macro(addon, '', 'output', fromFile("output.mtmacro"), **params))
+	addon.add(macros.Macro(addon, '', 'rollDice', fromFile("rollDice.mtmacro"), **params))
 	addon.add(macros.Macro(addon, '', 'jget', '''
 [h: '<!-- Like json.get, but will adapt if the requested reference cannot be made.  By default, returns 0, or returns a default named (as a third parameter). -->']
 
@@ -581,10 +577,10 @@ def main():
 }]
 ''', **params))
 	params = {'group': 'dnd5e'}
-	addon.add(macros.Macro(addon, '', 'Description', jinja2.Template(open('macros/description.mtmacro', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CastSpell', jinja2.Template(open('macros/castSpell.mtmacro', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'NPCAttack', jinja2.Template(open('macros/npcAttack.mtmacro', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'Init', jinja2.Template(open('macros/init.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'Description', fromFile('description.mtmacro'), **params))
+	addon.add(macros.Macro(addon, '', 'CastSpell', fromFile('castSpell.mtmacro'), **params))
+	addon.add(macros.Macro(addon, '', 'NPCAttack', fromFile('npcAttack.mtmacro'), **params))
+	addon.add(macros.Macro(addon, '', 'Init', fromFile('init.mtmacro'), **params))
 	addon.add(macros.Macro(addon, '', 'getNPCInitBonus', '''[h, macro("getNPCSkills@Lib:Addon5e"):0]
 [h: jskills = macro.return]
 [h: initb = json.get(jskills, "Initiative")]
@@ -635,15 +631,15 @@ def main():
 	[if (no_mod): jsaves = json.set(jsaves, Att ,default_mod)]
 }]
 [h: macro.return = jsaves]''', **params))
-	addon.add(macros.Macro(addon, '', 'SaveMe', jinja2.Template(open('macros/saveme.mtmacro', 'r').read()).render(), **params))
-	addon.add(macros.Macro(addon, '', 'CheckMe', jinja2.Template(open('macros/checkme.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'SaveMe', fromFile('saveme.mtmacro'), **params))
+	addon.add(macros.Macro(addon, '', 'CheckMe', fromFile('checkme.mtmacro'), **params))
 	params = {'group': 'aMenu'}
 	# TODO: control panel is currently empty but it is a customized panel where I can add whatever macro, it act as a campaign panel
 	# but is fully customizable, it's a html form
 	# see http://forums.rptools.net/viewtopic.php?f=20&t=23208&p=236662&hilit=amsave#p236662
 	addon.add(macros.Macro(addon, '', 'ControlPanel', '''[dialog("A5e Panel", "width=215; height=700; temporary=0; input=1"): {[r,macro("cpanel@this"):0]}]''', **params))
 	params = {'group': 'Format'}
-	addon.add(macros.Macro(addon, '', 'cpanel', jinja2.Template(open('macros/cpanel.mtmacro', 'r').read()).render(), **params))
+	addon.add(macros.Macro(addon, '', 'cpanel', fromFile('cpanel.mtmacro'), **params))
 	addon.add(macros.Macro(addon, '', 'HTMLMacroButton','''[h:bgColor	= arg(1)]
 [h,if(argCount() > 5): shadow = arg(5); shadow = "")]
 [h,if(argCount() > 6): toolTip = arg(6); toolTip = "")]
@@ -700,7 +696,7 @@ def main():
 	zone = Zone('Library')
 	zone.build(sTokens + [addon])
 	cp = Campaign('demo5e')
-	cp.build([zone], [], [])
+	cp.build([zone], [PSet('Basic', [])], [])
 	log.warning("Done building campaign file")
 
 	if zfile:

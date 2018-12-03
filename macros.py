@@ -8,7 +8,7 @@ import re
 
 log = logging.getLogger(__name__)
 
-spellTemplate = '''
+spellTemplate = u'''
 [h:data = json.set("{}",
 	"Flavor", "{{token.name}} casts {{spell.name}}",
 	"ParentToken",currentToken(),
@@ -52,7 +52,7 @@ class Macro(object):
 	def verbose(self): return "\t%s\n" % self
 
 	@property
-	def command(self): return jinja2.Template(self._command).render(macro=self)
+	def command(self): return jinja2.Template(self._command).render(macro=self).encode('utf-8')
 
 	@property
 	def label(self): return self._label
@@ -232,7 +232,7 @@ class SpellMacro(Macro):
 		suffix += 'R' if 'reaction' in spell.casting_time else ''
 		suffix += (('c' if suffix=='(' else ',c') if spell.concentration else '')
 		suffix += ')'
-		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token))
+		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token).encode("utf-8"))
 		self.action['description'] = '\n'.join(self.action['desc'])
 		self._group = 'Level %s' % spell.level if spell.level >= 1 else 'Cantrips'
 
