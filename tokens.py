@@ -22,6 +22,9 @@ from PIL import Image
 
 # local import
 import macros
+from util import Img, jenv, guid
+from zone import Zone
+from cmpgn import Campaign
 
 log = logging.getLogger()
 
@@ -32,19 +35,7 @@ if not os.path.exists(imglib):
 	imglib = '../imglib'
 imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo'] ]
 
-md5Template = '''<net.rptools.maptool.model.Asset>
-  <id>
-    <id>{{md5}}</id>
-  </id>
-  <name>{{name}}</name>
-  <extension>{{extension}}</extension>
-  <image/>
-</net.rptools.maptool.model.Asset>'''
-
 args = None
-
-def guid():
-	return base64.urlsafe_b64encode(uuid.uuid4().bytes)
 
 def dnd5Api(category):
 	"""Fetch all category items from the dnd database"""
@@ -183,9 +174,9 @@ class Token(Dnd5ApiObject):
 	pngFiles = sentinel
 	def __init__(self, js):
 		self.js = js
+		self.assets = {}
 		# for cached properties
 		self._guid = self.sentinel
-		self._img = self.sentinel
 		self._md5 = self.sentinel
 
 	def __repr__(self):
@@ -193,20 +184,22 @@ class Token(Dnd5ApiObject):
 			self.strength, self.dexterity, self.constitution,
 			self.intelligence, self.wisdom, self.charisma
 			], self.hit_points, self.roll_max_hp, self.armor_class,
-			self.challenge_rating, self.img_name)
+			self.challenge_rating, self.img.name)
 
 	# The 2 following methods are use by pickle to serialize a token
 	def __setstate__(self, state):
 		Dnd5ApiObject.__setstate__(self, state)
 		self._guid = self.sentinel
-		self._img = self.sentinel
+		self.assets = {}
 		self._md5 = self.sentinel
 
 	@property
+	def type(self): return 'NPC'
+
+	@property
 	def guid(self):
-		return ''
 		if self._guid is self.sentinel:
-			self._guid = self._guid or guid()
+			self._guid = guid()
 		return self._guid
 
 	@property
@@ -221,6 +214,11 @@ class Token(Dnd5ApiObject):
 		with open('properties.template') as template:
 			 t = jinja2.Template(template.read())
 			 return t.render()
+	
+	def render(self): return self.content_xml
+
+	@property
+	def portrait(self): return None
 
 	@property
 	def bcon(self): return (self.constitution-10)/2
@@ -415,7 +413,7 @@ class Token(Dnd5ApiObject):
 			('Immunities', self.immunities),
 			('Languages', self.languages),
 			('Perception', self.perception),
-			('ImageName', self.img_name),
+			('ImageName', self.img.name),
 			('SpellSlots', self.spell_slots),
 			# do ('bstr', '{floor((getProperty("Strength")-10)/2)}') for all attributes
 			] + [('b%s' % a[:3].lower(), '{floor((getProperty("%s")-10)/2)}' % a) for a in self.attributes] +
@@ -432,7 +430,7 @@ class Token(Dnd5ApiObject):
 	def img(self):
 		# try to fetch an appropriate image from the imglib directory
 		# using a stupid heuristic: the image / token.name match ratio
-		if self._img is self.sentinel: # cache to property
+		if self.assets.get('icon', None) is None:
 			# compute the diff ratio for the given name compared to the token name
 			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
 			# morph "/abc/def/anyfile.png" into "anyfile"
@@ -445,21 +443,16 @@ class Token(Dnd5ApiObject):
 				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
 				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
 			if bratio > 0.8:
-				self._img = Image.open(bfpath, 'r')
+				self.assets['icon'] = Img(bfpath)
 			else:
-				self._img = Image.open(imglib+'/dft.png', 'r')
-		return self._img
+				self.assets['icon'] = Img(imglib+'/dft.png')
+		return self.assets.get('icon', None)
 
 	@property
 	def img_name(self): return os.path.splitext(os.path.basename(self.img.filename))[0]
 
 	@property
-	def md5(self):
-		if self._md5 is self.sentinel: # cache this expensive property
-			out = io.BytesIO()
-			self.img.save(out, format='png')
-			self._md5 = hashlib.md5(out.getvalue()).hexdigest()
-		return self._md5
+	def md5(self): return self.img.md5
 
 	@property
 	def states(self): return [s for s in [State('Concentrating', 'false')]]
@@ -475,17 +468,12 @@ class Token(Dnd5ApiObject):
 			log.debug('Token image md5 %s' % self.md5)
 			# default image for the token, right now it's a brown bear
 			# zip the xml file named with the md5 containing the asset properties
-			zipme.writestr('assets/%s' % self.md5, jinja2.Template(md5Template).render(name=self.name, extension='png', md5=self.md5))
+			zipme.writestr('assets/%s' % self.md5, jenv().get_template('md5.template').render(name=self.name, extension='png', md5=self.md5))
 			# zip the img itself
-			out = io.BytesIO() ; self.img.save(out, format='PNG')
-			zipme.writestr('assets/%s.png' % self.md5, out.getvalue())
+			zipme.writestr('assets/%s.png' % self.md5, self.img.bytes)
 			# build thumbnails
-			out = io.BytesIO()
-			im = self.img.copy() ; im.thumbnail((50,50)) ; im.save(out, format='PNG')
-			zipme.writestr('thumbnail', out.getvalue())
-			out = io.BytesIO()
-			im = self.img.copy() ; im.thumbnail((500,500)) ; im.save(out, format='PNG')
-			zipme.writestr('thumbnail_large', out.getvalue())
+			zipme.writestr('thumbnail', self.img.thumbnail(50,50).getvalue())
+			zipme.writestr('thumbnail_large', self.img.thumbnail(500,500).getvalue())
 		return filename
 
 	def verbose(self):
@@ -501,6 +489,8 @@ class LibToken(Token):
 		Token.__init__(self, {'name': name, 'size': 'large'})
 		self._macros = []
 	def __repr__(self): return 'LibToken<%s>' % self.name
+	@property
+	def type(self): return 'Lib'
 	@property
 	def macros(self): return self._macros
 	@property
@@ -520,6 +510,20 @@ class LibToken(Token):
 	def spells(self): return []
 
 	def add(self, macro): self._macros.append(macro)
+
+class IToken(Token):
+	"""Image token"""
+	def __init__(self, *args, **kwargs):
+		Token.__init__(self, *args, **kwargs)
+		self.snapToGrid = 'false'
+		self.snapToScale = 'false'
+		self.layer = 'BACKGROUND'
+	@property
+	def props(self): return []
+	@property
+	def states(self): return []
+
+class Map(IToken): pass
 
 def main():
 	parser = argparse.ArgumentParser(description='DnD 5e token builder')
@@ -663,6 +667,7 @@ def main():
 	filename = addon.zipme()
 	log.warning("Done generating 1 library token: %s" % addon)
 
+
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
@@ -687,9 +692,17 @@ def main():
 		if zfile: 
 			zfile.write(filename, os.path.join("tokens", os.path.basename(filename)))
 		sTokens.append(token)
-		if 'dft.png' in token.img.filename: log.warning(str(token))
+		if 'dft.png' in token.img.name: log.warning(str(token))
 		cnt += 1
 	log.warning("Done generation %s tokens"%cnt)
+	
+	log.warning("building campaign file")
+	zone = Zone('Library')
+	zone.build(sTokens + [addon])
+	cp = Campaign('demo5e')
+	cp.build([zone], [], [])
+	log.warning("Done building campaign file")
+
 	if zfile:
 		zfile.close()
 		log.warning("Done writing delivery zip file '%s'" % deliveryFilename)

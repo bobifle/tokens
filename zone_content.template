@@ -1,0 +1,96 @@
+        <net.rptools.maptool.model.Zone>
+          <creationTime>1529596637347</creationTime>
+          <id reference="../../net.rptools.maptool.model.GUID"/>
+          <grid class="net.rptools.maptool.model.SquareGrid">
+            <offsetX>0</offsetX>
+            <offsetY>0</offsetY>
+            <size>50</size>
+            <zone reference="../.."/>
+            <cellShape>
+              <curves>
+                <sun.awt.geom.Order0>
+                  <direction>1</direction>
+                  <x>0.0</x>
+                  <y>0.0</y>
+                </sun.awt.geom.Order0>
+                <sun.awt.geom.Order1>
+                  <direction>1</direction>
+                  <x0>0.0</x0>
+                  <y0>0.0</y0>
+                  <x1>0.0</x1>
+                  <y1>50.0</y1>
+                  <xmin>0.0</xmin>
+                  <xmax>0.0</xmax>
+                </sun.awt.geom.Order1>
+                <sun.awt.geom.Order1>
+                  <direction>-1</direction>
+                  <x0>50.0</x0>
+                  <y0>0.0</y0>
+                  <x1>50.0</x1>
+                  <y1>50.0</y1>
+                  <xmin>50.0</xmin>
+                  <xmax>50.0</xmax>
+                </sun.awt.geom.Order1>
+              </curves>
+            </cellShape>
+          </grid>
+          <gridColor>-16777216</gridColor>
+          <imageScaleX>1.0</imageScaleX>
+          <imageScaleY>1.0</imageScaleY>
+          <tokenVisionDistance>1000</tokenVisionDistance>
+          <unitsPerCell>1</unitsPerCell>
+          <drawables class="linked-list"/>
+          <gmDrawables class="linked-list"/>
+          <objectDrawables class="linked-list"/>
+          <backgroundDrawables class="linked-list"/>
+          <labels class="linked-hash-map"/>
+          <tokenMap>
+          {% for token in zone.tokens %}
+          <entry>
+            <net.rptools.maptool.model.GUID>
+              <baGUID>{{token.guid}}</baGUID>
+            </net.rptools.maptool.model.GUID>
+{{token.render()}}
+          </entry>
+          {% endfor%}
+          </tokenMap>
+          <exposedAreaMeta/>
+          <tokenOrderedList class="linked-list">
+{%- for token in zone.tokens %}
+            <net.rptools.maptool.model.Token reference="../../tokenMap/entry[{{loop.index}}]/net.rptools.maptool.model.Token"/>
+{%- endfor %}
+          </tokenOrderedList>
+          <initiativeList>
+            <tokens/>
+            <current>-1</current>
+            <round>-1</round>
+            <zoneId reference="../../../net.rptools.maptool.model.GUID"/>
+            <fullUpdate>false</fullUpdate>
+            <hideNPC>false</hideNPC>
+          </initiativeList>
+          <exposedArea>
+            <curves/>
+          </exposedArea>
+          <hasFog>false</hasFog>
+          <fogPaint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+            <color>-16777216</color>
+          </fogPaint>
+          <topology>
+            <curves reference="../../exposedArea/curves"/>
+          </topology>
+          <backgroundPaint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+            <color>-16777216</color>
+          </backgroundPaint>
+          <boardPosition>
+            <x>0</x>
+            <y>0</y>
+          </boardPosition>
+          <drawBoard>true</drawBoard>
+          <boardChanged>false</boardChanged>
+          <name>{{zone.name}}</name>
+          <isVisible>true</isVisible>
+          <visionType>OFF</visionType>
+          <tokenSelection>ALL</tokenSelection>
+          <height>0</height>
+          <width>0</width>
+        </net.rptools.maptool.model.Zone>

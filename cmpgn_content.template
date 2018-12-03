@@ -1,0 +1,712 @@
+<net.rptools.maptool.util.PersistenceUtil_-PersistedCampaign>
+  <campaign>
+    <id>
+      <baGUID>AAAAAIFwECMLAAAAAAAAAA==</baGUID>
+    </id>
+    <zones>
+{%- for zone in cmpgn.zones %}
+      <entry>
+        <net.rptools.maptool.model.GUID>
+          <baGUID>{{zone.guid}}</baGUID>
+        </net.rptools.maptool.model.GUID>
+{{zone.render()}}
+      </entry>
+{%- endfor %}
+    </zones>
+    <campaignProperties>
+      <tokenTypeMap>
+{%- for pset in cmpgn.psets %}
+        <entry>
+          <string>{{pset.name}}</string>
+          <list>
+{%- for prop in pset.props %}
+			{{prop.render()}}
+{%- endfor %}
+          </list>
+        </entry>
+{%- endfor %}
+      </tokenTypeMap>
+      <remoteRepositoryList/>
+      <lightSourcesMap class="tree-map">
+        <entry>
+          <string>D20</string>
+          <linked-hash-map>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCYyXCvh0BAAAAAKgCIQ==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>5.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>10.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Candle - 5</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY3PCvh0CAAAAAKgCYw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>15.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>30.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Lamp - 15</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY3PCvh0DAAAAAKgCYw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>20.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>40.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Torch - 20</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY3PCvh0EAAAAAKgCYw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>20.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>40.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Everburning - 20</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY3PCvh0FAAAAAKgCYw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>30.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>60.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Lantern, Hooded - 30</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY3PCvh0GAAAAAKgCYw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>30.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                  <net.rptools.maptool.model.Light>
+                    <paint class="net.rptools.maptool.model.drawing.DrawableColorPaint">
+                      <color>1677721600</color>
+                    </paint>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>60.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>Sunrod - 30</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+          </linked-hash-map>
+        </entry>
+        <entry>
+          <string>Generic</string>
+          <linked-hash-map>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0HAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>5.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>5</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0IAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>15.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>15</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0JAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>20.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>20</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0KAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>30.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>30</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0LAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>40.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>40</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+            <entry>
+              <net.rptools.maptool.model.GUID>
+                <baGUID>wKgCY4PCvh0MAAAAAKgCAw==</baGUID>
+              </net.rptools.maptool.model.GUID>
+              <net.rptools.maptool.model.LightSource>
+                <lightList class="linked-list">
+                  <net.rptools.maptool.model.Light>
+                    <facingOffset>0.0</facingOffset>
+                    <radius>60.0</radius>
+                    <arcAngle>360.0</arcAngle>
+                    <isGM>false</isGM>
+                    <ownerOnly>false</ownerOnly>
+                  </net.rptools.maptool.model.Light>
+                </lightList>
+                <name>60</name>
+                <id reference="../../net.rptools.maptool.model.GUID"/>
+                <type>NORMAL</type>
+                <lumens>0</lumens>
+              </net.rptools.maptool.model.LightSource>
+            </entry>
+          </linked-hash-map>
+        </entry>
+      </lightSourcesMap>
+      <lookupTableMap>
+{%- for table in cmpgn.tables %}
+		<entry>
+         <string>{{table.name}}</string>
+{{table.render()}}
+		</entry>
+{%- endfor %}
+      </lookupTableMap>
+      <sightTypeMap>
+        <entry>
+          <string>Lowlight</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Lowlight</name>
+            <multiplier>2.0</multiplier>
+            <arc>0</arc>
+            <distance>0.0</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+        <entry>
+          <string>Darkvision</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Darkvision</name>
+            <multiplier>1.0</multiplier>
+            <personalLightSource>
+              <lightList class="linked-list">
+                <net.rptools.maptool.model.Light>
+                  <facingOffset>0.0</facingOffset>
+                  <radius>60.0</radius>
+                  <arcAngle>360.0</arcAngle>
+                  <isGM>false</isGM>
+                  <ownerOnly>false</ownerOnly>
+                </net.rptools.maptool.model.Light>
+              </lightList>
+              <name>60</name>
+              <id>
+                <baGUID>wKgCY4PCvh0MAAAAAKgCAw==</baGUID>
+              </id>
+              <type>NORMAL</type>
+              <lumens>0</lumens>
+            </personalLightSource>
+            <arc>0</arc>
+            <distance>62.5</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+        <entry>
+          <string>Normal Vision - Short Range</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Normal Vision - Short Range</name>
+            <multiplier>1.0</multiplier>
+            <shape>CIRCLE</shape>
+            <arc>0</arc>
+            <distance>12.5</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+        <entry>
+          <string>Normal</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Normal</name>
+            <multiplier>1.0</multiplier>
+            <arc>0</arc>
+            <distance>0.0</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+        <entry>
+          <string>Conic Vision</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Conic Vision</name>
+            <multiplier>1.0</multiplier>
+            <shape>CONE</shape>
+            <arc>120</arc>
+            <distance>0.0</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+        <entry>
+          <string>Square Vision</string>
+          <net.rptools.maptool.model.SightType>
+            <name>Square Vision</name>
+            <multiplier>1.0</multiplier>
+            <shape>SQUARE</shape>
+            <arc>0</arc>
+            <distance>0.0</distance>
+            <offset>0</offset>
+          </net.rptools.maptool.model.SightType>
+        </entry>
+      </sightTypeMap>
+      <defaultSightType>Normal</defaultSightType>
+      <tokenStates class="linked-hash-map">
+        <entry>
+          <string>Dead</string>
+          <net.rptools.maptool.client.ui.token.XTokenOverlay>
+            <name>Dead</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>255</red>
+              <green>0</green>
+              <blue>0</blue>
+              <alpha>255</alpha>
+            </color>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.XTokenOverlay>
+        </entry>
+        <entry>
+          <string>Disabled</string>
+          <net.rptools.maptool.client.ui.token.XTokenOverlay>
+            <name>Disabled</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>128</red>
+              <green>128</green>
+              <blue>128</blue>
+              <alpha>255</alpha>
+            </color>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.XTokenOverlay>
+        </entry>
+        <entry>
+          <string>Hidden</string>
+          <net.rptools.maptool.client.ui.token.ShadedTokenOverlay>
+            <name>Hidden</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>25</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>0</red>
+              <green>0</green>
+              <blue>0</blue>
+              <alpha>255</alpha>
+            </color>
+          </net.rptools.maptool.client.ui.token.ShadedTokenOverlay>
+        </entry>
+        <entry>
+          <string>Prone</string>
+          <net.rptools.maptool.client.ui.token.OTokenOverlay>
+            <name>Prone</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>0</red>
+              <green>0</green>
+              <blue>255</blue>
+              <alpha>255</alpha>
+            </color>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.OTokenOverlay>
+        </entry>
+        <entry>
+          <string>Incapacitated</string>
+          <net.rptools.maptool.client.ui.token.OTokenOverlay>
+            <name>Incapacitated</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color reference="../../../entry/net.rptools.maptool.client.ui.token.XTokenOverlay/color"/>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.OTokenOverlay>
+        </entry>
+        <entry>
+          <string>Other</string>
+          <net.rptools.maptool.client.ui.token.ColorDotTokenOverlay>
+            <name>Other</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color reference="../../../entry/net.rptools.maptool.client.ui.token.XTokenOverlay/color"/>
+            <stroke>
+              <width>3.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+            <corner>SOUTH_EAST</corner>
+          </net.rptools.maptool.client.ui.token.ColorDotTokenOverlay>
+        </entry>
+        <entry>
+          <string>Other2</string>
+          <net.rptools.maptool.client.ui.token.DiamondTokenOverlay>
+            <name>Other2</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color reference="../../../entry/net.rptools.maptool.client.ui.token.XTokenOverlay/color"/>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.DiamondTokenOverlay>
+        </entry>
+        <entry>
+          <string>Other3</string>
+          <net.rptools.maptool.client.ui.token.YieldTokenOverlay>
+            <name>Other3</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>255</red>
+              <green>255</green>
+              <blue>0</blue>
+              <alpha>255</alpha>
+            </color>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.YieldTokenOverlay>
+        </entry>
+        <entry>
+          <string>Other4</string>
+          <net.rptools.maptool.client.ui.token.TriangleTokenOverlay>
+            <name>Other4</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <color>
+              <red>255</red>
+              <green>0</green>
+              <blue>255</blue>
+              <alpha>255</alpha>
+            </color>
+            <stroke>
+              <width>5.0</width>
+              <join>2</join>
+              <cap>0</cap>
+              <miterlimit>10.0</miterlimit>
+              <dash__phase>0.0</dash__phase>
+            </stroke>
+          </net.rptools.maptool.client.ui.token.TriangleTokenOverlay>
+        </entry>
+      </tokenStates>
+      <tokenBars class="linked-hash-map">
+        <entry>
+          <string>Health</string>
+          <net.rptools.maptool.client.ui.token.TwoToneBarTokenOverlay>
+            <name>Health</name>
+            <order>0</order>
+            <mouseover>false</mouseover>
+            <opacity>100</opacity>
+            <showGM>true</showGM>
+            <showOwner>true</showOwner>
+            <showOthers>true</showOthers>
+            <increments>0</increments>
+            <side>TOP</side>
+            <barColor>
+              <red>32</red>
+              <green>180</green>
+              <blue>32</blue>
+              <alpha>255</alpha>
+            </barColor>
+            <thickness>6</thickness>
+            <bgColor reference="../../../../tokenStates/entry[3]/net.rptools.maptool.client.ui.token.ShadedTokenOverlay/color"/>
+          </net.rptools.maptool.client.ui.token.TwoToneBarTokenOverlay>
+        </entry>
+      </tokenBars>
+      <characterSheets>
+        <entry>
+          <string>Basic</string>
+          <string>net/rptools/maptool/client/ui/forms/basicCharacterSheet.xml</string>
+        </entry>
+      </characterSheets>
+      <initiativeOwnerPermissions>false</initiativeOwnerPermissions>
+      <initiativeMovementLock>false</initiativeMovementLock>
+    </campaignProperties>
+    <macroButtonProperties/>
+    <macroButtonLastIndex>0</macroButtonLastIndex>
+  </campaign>
+  <assetMap>
+{%- for table in cmpgn.tables %} {% set tindex=loop.index %}
+{%- for asset in table.assets %}
+     <entry>
+      <net.rptools.lib.MD5Key reference="../../../campaign/campaignProperties/lookupTableMap/entry[{{tindex}}]/net.rptools.maptool.model.LookupTable/entryList/net.rptools.maptool.model.LookupTable_-LookupEntry[{{loop.index}}]/imageId"/>
+      <null/>
+    </entry>
+{%- endfor %}
+{%- endfor %}
+{%- for zone in cmpgn.zones %}{% set zoneId=loop.index %}
+{%- for token in zone.tokens %}
+    <entry>
+      <net.rptools.lib.MD5Key reference="../../../campaign/zones/entry[{{zoneId}}]/net.rptools.maptool.model.Zone/tokenMap/entry[{{loop.index}}]/net.rptools.maptool.model.Token/imageAssetMap/entry/net.rptools.lib.MD5Key"/>
+      <null/>
+    </entry>
+{%- if token.portrait %}
+    <entry>
+      <net.rptools.lib.MD5Key reference="../../../campaign/zones/entry[{{zoneId}}]/net.rptools.maptool.model.Zone/tokenMap/entry[{{loop.index}}]/net.rptools.maptool.model.Token/portraitImage"/>
+      <null/>
+    </entry>
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+  </assetMap>
+  <currentZoneId reference="../campaign/zones/entry/net.rptools.maptool.model.GUID"/>
+  <currentView>
+    <oneToOneScale>1.0</oneToOneScale>
+    <scale>0.9302325581395349</scale>
+    <scaleIncrement>0.075</scaleIncrement>
+    <zoomLevel>-1</zoomLevel>
+    <offsetX>10</offsetX>
+    <offsetY>189</offsetY>
+    <width>0</width>
+    <height>0</height>
+    <initialized>false</initialized>
+  </currentView>
+</net.rptools.maptool.util.PersistenceUtil_-PersistedCampaign>
+
