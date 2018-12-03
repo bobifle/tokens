@@ -13,11 +13,12 @@ If you are searching for fully automated frameworks, they are more heavy framewo
 
 ## Installation
 
-Extract the zip file.
-You should see:
+### Campaign file version
+Download https://1drv.ms/u/s!Amfr5xYDSzo2mC-J6QDBBNGZCvdL and open the file with MapTool.
 
-`tokens/*rptok`
-`Lib_Addon5e.rptok`
+### Drop-in version
+
+Download and extract https://1drv.ms/u/s!Amfr5xYDSzo2mCrAqHL6sLMJNLga
 
 Copy `Lib_Addon5e.rptok` into your library map (any non player visible map), create one if you don't have any. **Rename the token "Lib:Addon5e"**,
 (depending on your Maptool options, the application may have renamed it when you dragged it).
@@ -26,11 +27,11 @@ Drag any token file in your maps to start using it.
 
 Optionaly, you can add the tokens directory to your maptool library window.
 
+
 ## Known limitations
-* all macros broadcast to the GM and players alike. GM, you won't be able to fudge. I'm working on it...
-* some dragons miss their legendary/lair actions
+* some monsters have their SRD version stats instead of the Monster Manual ones
 * as a general rule, for important NPCs, double check with the monster manual
-* tokens are not editable, not in a friendly way. Maptool does restrict access to token's properties. Maybe things will change in the future...
+* tokens are editable only using a token manager (http://forums.rptools.net/viewtopic.php?t=14458)
 
 ## Credits
 
@@ -40,6 +41,20 @@ Optionaly, you can add the tokens directory to your maptool library window.
 
 
 ## Changelogs
+
+### v0.5
+* fix some bad monster sheet utf-8 characters
+* remove large thumbnail from token, lowering the token size on disk by a great deal
+* a demo campaign file is now available showcasing all the token in one map
+* fix a bug for some spellcasters missing their spellslots. The spell description should now be displayed.
+
+### v0.4
+* Descriptions/rolls/text is now sent to "self", this is configurable through the token property "oTargets". You can change it to "all" to broadcast macro output to everyone.
+* added onCampaignLoad to register UDFs, be sure to reload the campaign or manually click on the macro onCampaignLoad
+
+### v0.3
+* restore compatibility with 1.4.0.0 versions (tested with 1.4.0.5)
+
 ### v0.2
 * dependency to the DnD5e framework is now gone, these are now complete drop-in tokens
 * added 40+ tokens from volo's

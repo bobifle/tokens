@@ -469,7 +469,8 @@ class Token(Dnd5ApiObject):
 			zipme.writestr('assets/%s.png' % self.md5, self.img.bytes)
 			# build thumbnails
 			zipme.writestr('thumbnail', self.img.thumbnail(50,50).getvalue())
-			zipme.writestr('thumbnail_large', self.img.thumbnail(500,500).getvalue())
+			#dont include the large thumbnail, it will double the token size for no benefit
+			#zipme.writestr('thumbnail_large', self.img.thumbnail(500,500).getvalue())
 		return filename
 
 	def verbose(self):
