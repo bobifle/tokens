@@ -4,12 +4,14 @@
   </id>
   <beingImpersonated>false</beingImpersonated>
   <imageAssetMap>
+	{% for name, asset in token.assets.iteritems() -%}
     <entry>
-      <null/>
+      {% if name == "null"%}<null/>{%else%}<string>{{name}}</string>{% endif %}
       <net.rptools.lib.MD5Key>
-        <id>{{token.md5}}</id>
+        <id>{{asset.md5}}</id>
       </net.rptools.lib.MD5Key>
     </entry>
+	{% endfor%}
   </imageAssetMap>
   <x>{{token.x}}</x>
   <y>{{token.y}}</y>
@@ -43,6 +45,11 @@
   <isFlippedX>false</isFlippedX>
   <isFlippedY>false</isFlippedY>
   <sightType>Normal</sightType>
+{%-if token.portrait %}
+  <portraitImage>
+    <id>{{ token.portrait.md5}}</id>
+  </portraitImage>
+{%- endif %}
   <hasSight>false</hasSight>
   <sizeMap>
     <entry>

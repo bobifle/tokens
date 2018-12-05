@@ -32,6 +32,7 @@ Optionaly, you can add the tokens directory to your maptool library window.
 * some monsters have their SRD version stats instead of the Monster Manual ones
 * as a general rule, for important NPCs, double check with the monster manual
 * tokens are editable only using a token manager (http://forums.rptools.net/viewtopic.php?t=14458)
+* further edition of the token are not reflected on the token sheet (but all other macros will be udpated)
 
 ## Credits
 
@@ -45,7 +46,7 @@ Optionaly, you can add the tokens directory to your maptool library window.
 ### v0.5
 * fix some bad monster sheet utf-8 characters
 * remove large thumbnail from token, lowering the token size on disk by a great deal
-* a demo campaign file is now available showcasing all the token in one map
+* a demo campaign file is now available showcasing all the tokens in one map
 * fix a bug for some spellcasters missing their spellslots. The spell description should now be displayed.
 
 ### v0.4
