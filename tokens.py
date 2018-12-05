@@ -174,7 +174,7 @@ class Token(Dnd5ApiObject):
 	pngFiles = sentinel
 	def __init__(self, js):
 		self.js = js
-		self.assets = {}
+		self._assets = None
 		self.x, self.y = 0, 0
 		# for cached properties
 		self._guid = self.sentinel
@@ -190,7 +190,30 @@ class Token(Dnd5ApiObject):
 	def __setstate__(self, state):
 		Dnd5ApiObject.__setstate__(self, state)
 		self._guid = self.sentinel
-		self.assets = {}
+		self._assets = None
+
+	@property
+	def assets(self):
+		if self._assets is None:
+			self._assets = {}
+			# try to fetch an appropriate image from the imglib directory
+			# using a stupid heuristic: the image / token.name match ratio
+			# compute the diff ratio for the given name compared to the token name
+			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
+			# morph "/abc/def/anyfile.png" into "anyfile"
+			short_name = lambda full_path: os.path.splitext(os.path.basename(full_path))[0]
+			bratio=0
+			if self.pngs:
+				# generate the diff ratios
+				ratios = ((f, ratio(short_name(f))) for f in self.pngs)
+				# pickup the best match, it's a tuple (fpath, ratio)
+				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
+				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
+			if bratio > 0.8:
+				self._assets['null'] = Img(bfpath)
+			else:
+				self._assets['null'] = Img(imglib+'/dft.png')
+		return self._assets
 
 	@property
 	def type(self): return 'NPC'
@@ -421,29 +444,7 @@ class Token(Dnd5ApiObject):
 		return iter(self.pngFiles) if self.pngFiles else None
 
 	@property
-	def img(self):
-		# try to fetch an appropriate image from the imglib directory
-		# using a stupid heuristic: the image / token.name match ratio
-		if self.assets.get('null', None) is None:
-			# compute the diff ratio for the given name compared to the token name
-			ratio = lambda name: difflib.SequenceMatcher(None, name.lower(), self.name.lower()).ratio()
-			# morph "/abc/def/anyfile.png" into "anyfile"
-			short_name = lambda full_path: os.path.splitext(os.path.basename(full_path))[0]
-			bratio=0
-			if self.pngs:
-				# generate the diff ratios
-				ratios = ((f, ratio(short_name(f))) for f in self.pngs)
-				# pickup the best match, it's a tuple (fpath, ratio)
-				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
-				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
-			if bratio > 0.8:
-				self.assets['null'] = Img(bfpath)
-			else:
-				self.assets['null'] = Img(imglib+'/dft.png')
-		return self.assets.get('null', None)
-
-	@property
-	def img_name(self): return os.path.splitext(os.path.basename(self.img.filename))[0]
+	def img(self): return self.assets.get('null', None)
 
 	@property
 	def states(self): return [s for s in [State('Concentrating', 'false')]]
@@ -524,13 +525,14 @@ class Map(IToken): pass
 class POI(LibToken):
 	def __init__(self, name):
 		LibToken.__init__(self, name)
-		self.assets['null'] = Img(imglib+'/../GUI_Icons_png/transparent/location_t.png')
-		self.assets['chest'] = Img(imglib+'/../GUI_Icons_png/transparent/chest_t.png')
-		self.assets['gold'] = Img(imglib+'/../GUI_Icons_png/transparent/gold_t.png')
-		self.assets['quest_c'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_complete_t.png')
-		self.assets['quest'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_t.png')
-	@property
-	def img(self): return self.assets['null']
+		# don't put portrait and handouts in sels.assets, when building campaign file
+		# we need to differentiate img assets, from portrait and handouts...
+		self._assets = {}
+		self._assets['null'] = Img(imglib+'/../GUI_Icons_png/transparent/location_t.png')
+		self._assets['chest'] = Img(imglib+'/../GUI_Icons_png/transparent/chest_t.png')
+		self._assets['gold'] = Img(imglib+'/../GUI_Icons_png/transparent/gold_t.png')
+		self._assets['quest_c'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_complete_t.png')
+		self._assets['quest'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_t.png')
 	@property
 	def portrait(self): return None
 	@property
