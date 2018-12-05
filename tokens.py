@@ -539,8 +539,8 @@ class POI(LibToken):
 	def macros(self):
 		if not self._macros:
 			for name, asset in self.assets.iteritems():
-				self._macros.append(macros.Macro(self, '', name if name != 'null' else 'location', ''' [h: setTokenImage("asset://%s")] ''' % asset.md5))
-			self._macros.append(macros.Macro(self, '', "showMeAll", '''hidden token prop "images" : [r: getProperty("images")] '''))
+				self._macros.append(macros.Macro(self, '', name if name != 'null' else 'location', ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icon'))
+			self._macros.append(macros.Macro(self, '', "fromHandout", '''[h: setGMNotes("<img src='" + string(getTokenHandout()) + "'/>")][h: setSize("medium")][h:setLayer("GM")]''', group='settings'))
 		return self._macros
 	@property
 	def props(self): 
@@ -691,7 +691,7 @@ def main():
 	log.warning("Done generating 1 library token: %s", addon)
 
 
-	poi = POI("location")
+	poi = POI("POI")
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
