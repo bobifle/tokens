@@ -83,7 +83,7 @@
         <colorKey>{{macro.color}}</colorKey>
         <hotKey>None</hotKey>
         <command>{{macro.command|e}}</command>
-        <label>{{macro.label}}</label>
+        <label>{{macro.label|e}}</label>
         <group>{{macro.group}}</group>
         <sortby></sortby>
         <autoExecute>true</autoExecute>
