@@ -536,14 +536,39 @@ class POI(LibToken):
 		self._assets['gold'] = Img(imglib+'/../GUI_Icons_png/transparent/gold_t.png')
 		self._assets['quest_c'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_complete_t.png')
 		self._assets['quest'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_t.png')
+		self._assets['magnifier'] = Img(imglib+'/../GUI_Icons_png/transparent/magnifier_t.png')
+		for num in range(1,9):
+			self._assets['%sb'%num] = Img(imglib+'/%sb.png'%num)
+			self._assets['%sg'%num] = Img(imglib+'/%sg.png'%num)
+		# resize all assets to a reasonable size
+		for asset in self.assets.values():
+			asset.bytes = asset.thumbnail(100,100).getvalue()
 	@property
 	def portrait(self): return None
 	@property
 	def macros(self):
 		if not self._macros:
 			for name, asset in self.assets.iteritems():
-				self._macros.append(macros.Macro(self, '', name if name != 'null' else 'location', ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icon'))
-			self._macros.append(macros.Macro(self, '', "fromHandout", '''[h: setGMNotes("<img src='" + string(getTokenHandout()) + "'/>")][h: setSize("medium")][h:setLayer("GM")]''', group='settings'))
+				label = '<img height=40 width=40 src="asset://%s"></img>' % asset.md5
+				self._macros.append(macros.Macro(self, '', label, ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icons' if len(name)>2 else 'IDs', colors=('black', 'white')))
+			self._macros.append(macros.Macro(self, '', "fromHandout", '''
+[h: gmNotes = ""]
+[h: pcNotes = "<!-- uncomment and adapt to your liking -->"]
+[h: pcNotes = pcNotes + "<!-- <FONT COLOR=GREEN SIZE=5><I>Important Note</I></FONT><HR> -->"]
+[h: pid = getTokenPortrait()]
+[h: hid = getTokenHandout()]
+[h, if (pid != ""), code: {
+	[h: gmNotes = gmNotes + "<img src='" + pid + "'/><br>"]
+};{}]
+[h, if (hid != ""), code: {
+	[h: gmNotes = gmNotes + "<img src='" + hid + "'/>"]
+};{}]
+[h: setNotes(pcNotes)]
+[h: setGMNotes(gmNotes)]
+[h: setSize("medium")]
+[h: setLayer("GM")]
+[h: setTokenSnapToGrid(0)]]
+''', group='aSettings'))
 		return self._macros
 	@property
 	def props(self):
