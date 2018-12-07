@@ -1,0 +1,15 @@
+Raw block 1
+[var1 = 5]
+Raw block 2
+var2=[r: var2 = 2d12]
+var3=[h: var3 = 7*2]
+var4=[h: var4 = 7+var3]
+[h: test = 0]
+test1=[if (test): test1 = "true"; test1 = "false"]
+test2=[if (1): test2 = "true"; test2 = "false"]
+test3=[if (3 == 2+1): test3 = "true"; test3 = "false"]
+test4=[h, if (3 < 2+1): test4 = "true"; test4 = "false"]
+var5=[r: var5 = 7/2]
+var6=[r: var6 = 7-2]
+var7=[r: var7 = 7+12/4-2] (expecting 8)
+var8=[r: var8 = (7+12)/(4-2)] (expecting 9)
