@@ -358,7 +358,7 @@ class Token(Dnd5ApiObject):
 			macros.Macro(self, None, 'CheckMe', '[macro("CheckMe@Lib:Addon5e"):0]', **{'group': 'Rolls', 'colors': ('white', 'green'), 'tooltip': 'Roll Skill Checks'}),
 		]
 		if not args.delivery: 
-			commons.append(macros.Macro(self, None, 'Debug', '[macro("Debug@Lib:Addon5e"):0]', **{'group': 'zDebug', 'colors': ('white', 'black')}))
+			commons.append(macros.Macro(self, None, 'Debug', '[r: a5e.debug()]', **{'group': 'zDebug', 'colors': ('white', 'black')}))
 		self._macros = list(itertools.chain(actions, spellCast, specials, legends, lairs, reg, commons, spells))
 		return self._macros
 
