@@ -6,19 +6,15 @@ import re
 import json
 import requests
 import logging
-import base64
 import zipfile
-import uuid
 import jinja2
 import glob
 import difflib
-import hashlib
-import io
 import pickle
 import argparse
 import itertools
 import collections
-from PIL import Image
+import codecs
 
 # local import
 import macros
@@ -57,14 +53,14 @@ class Prop(object):
 		self.value = value
 	def __repr__(self): return '%s<%s,%s>' % (self.__class__.__name__, self.name, self.value)
 	def render(self):
-		return jinja2.Template('''      <entry>
+		return jinja2.Template(u'''      <entry>
         <string>{{prop.name.lower()}}</string>
         <net.rptools.CaseInsensitiveHashMap_-KeyValue>
           <key>{{prop.name}}</key>
           <value class="string">{{prop.value}}</value>
           <outer-class reference="../../../.."/>
         </net.rptools.CaseInsensitiveHashMap_-KeyValue>
-      </entry>''').render(prop=self).encode("utf-8")
+      </entry>''').render(prop=self)
 
 class Dnd5ApiObject(object):
 	sfile_name = 'nofile.pickle' # filename used for serialization
@@ -226,12 +222,12 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def content_xml(self):
-		return jenv().get_template('content.template').render(token=self).encode("utf-8") or ''
+		return jenv().get_template('content.template').render(token=self) or u''
 
 	@property
 	def properties_xml(self):
-		return jenv().get_template('properties.template').render().encode("utf-8")
-	
+		return jenv().get_template('properties.template').render()
+
 	def render(self): return self.content_xml
 
 	@property
@@ -455,8 +451,8 @@ class Token(Dnd5ApiObject):
 		# don't compress to avoid technical issue when sharing files
 		# the gain is very small anyway
 		with zipfile.ZipFile(filename, "w", zipfile.ZIP_STORED) as zipme:
-			zipme.writestr('content.xml', self.content_xml)
-			zipme.writestr('properties.xml', self.properties_xml)
+			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
+			zipme.writestr('properties.xml', self.properties_xml.encode('utf-8'))
 			# default image for the token, right now it's a brown bear
 			# zip the xml file named with the md5 containing the asset properties
 			for name, asset in self.assets.iteritems():
@@ -486,7 +482,7 @@ class LibToken(Token):
 	@property
 	def macros(self): return self._macros
 	@property
-	def props(self): 
+	def props(self):
 		with open(r'../5e-database/5e-SRD-Ability-Scores.json', 'r') as afile:
 			data = json.load(afile)
 		all_skills = {}
@@ -543,10 +539,78 @@ class POI(LibToken):
 			self._macros.append(macros.Macro(self, '', "fromHandout", '''[h: setGMNotes("<img src='" + string(getTokenHandout()) + "'/>")][h: setSize("medium")][h:setLayer("GM")]''', group='settings'))
 		return self._macros
 	@property
-	def props(self): 
+	def props(self):
 		return (Prop(name, value) for name, value in [
 			('images', json.dumps({name: asset.md5 for (name, asset) in self.assets.iteritems()}))
 		])
+
+def loadFromRst(fdata):
+	rst = fdata.read()
+	pref, content = re.split('\n-+\n', rst)
+	sections = re.split('\n~+\n', content)
+	# get rid of the possible description
+	if 'Armor Class' not in sections[0]:
+		sections = sections[1:]
+	stats, actions = sections[:2]
+	stats = '\n'.join((l for l in stats.splitlines() if l))
+	size, _type, subtype, align = re.search(r'(\w+) (\w+) ?(\(.*?\))?, (.*)', stats).groups()
+	st, dex, con, intel, wis, cha = [int(e) for e in re.search(r'\| (\d+) \(.?\d+\)\s+'*6, stats).groups()]
+	def getme(what, pattern, default=None):
+		if ('**%s**' % what not in stats and '**%s:**' % what not in stats  ):
+			if default is None: raise RuntimeError("%s not found" % what)
+			return default
+		return re.search('\*\*%s:?\*\* ' % what + pattern, stats).group(1)
+	ret = {
+	"index": 0,
+	"name": pref.splitlines()[-1],
+	"ref": "Tome of Beast",
+	"size": size,
+	"type": _type,
+	"subtype": "",
+	"alignment": align,
+	"armor_class":  int(getme ('Armor Class', r'(\d+)')),
+	"hit_points":   int(getme('Hit Points', r'(\d+)')),
+	"hit_dice": getme('Hit Points', '\d+ \((\d+d\d+)'),
+	"speed": getme('Speed', '(.*?)\n'),
+	"strength":      st,
+	"dexterity":    dex,
+	"constitution": con,
+	"intelligence": intel,
+	"wisdom":       wis,
+	"charisma":      cha,
+	"skills" : getme('Skills', '(.*?)\n',""),
+	"saves" : "",
+	"damage_vulnerabilities": "",
+	"damage_resistances": "",
+	"damage_immunities": getme('Damage Immunities', '(.*?)\n',""),
+	"condition_immunities": getme('Condition Immunities', '(.*?)\n',""),
+	"senses": getme('Senses', '(.*?)\n',""),
+	"languages": getme('Languages', '(.*?)\n',""),
+	"challenge_rating": int(getme('Challenge', r'(\d+)')),
+	"special_abilities": [
+	{
+		"name": "Fear Aura",
+		"desc": "Any beast or humanoid that starts its turn within 10 feet of the meenlock must succeed on a DC 11 Wisdom saving throw or be frightened until the start of the creature's next turn"
+	},
+	{
+		"name": "Light Sensitivity",
+		"desc": "While in bright light, the meenlock has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight."
+	},
+	{
+		"name": "Shadow Teleport",
+		"desc": "(Recharge 5-6) As a bonus action, the meenlock can teleport to an unoccupied space within 30 feet of it, provided that both the space it's teleporting from and its destination are in dim light or darkness. The destination need not be within line of sight."
+	}
+	],
+	"actions": [
+	{
+		"name": "Claws",
+		"desc": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target.  Hit: 7 (2d4 + 2) slashing damage, and the target must succeed on a DC 11 Constitution saving throw or be paralyzed for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success."
+	}
+	],
+	"reactions": [],
+	"legendary_actions": []
+}
+	return ret
 
 def main():
 	parser = argparse.ArgumentParser(description='DnD 5e token builder')
@@ -557,9 +621,16 @@ def main():
 	args = parser.parse_args()
 	if not os.path.exists('build'): os.makedirs('build')
 	localMonsters = []
-	for f in [r'../5e-database/5e-SRD-Monsters-volo.json', r'../5e-database/5e-SRD-Monsters.json']:
-		with open(f, 'r') as mfile:
-			localMonsters += json.load(mfile)
+	tob = '../open5e/legacy-source-content/monsters/tome-of-beasts/'
+	for f in [
+			# r'../5e-database/5e-SRD-Monsters-volo.json',
+			# r'../5e-database/5e-SRD-Monsters.json',
+			]+ [os.path.join(dp, f) for dp, dn, filenames in os.walk(tob) for f in filenames if os.path.splitext(f)[1] == '.rst' and 'index' not in f]:
+		with codecs.open(f, 'r', encoding='utf8') as mfile:
+			if f.endswith('json'):
+				localMonsters += json.load(mfile)
+			if f.endswith('rst'):
+				localMonsters += [loadFromRst(mfile)]
 
 	mLog = logging.getLogger()
 	mLog.setLevel(logging.DEBUG)
@@ -707,19 +778,19 @@ def main():
 	deliveryFilename = 'build/dnd5eTokens.zip'
 	zfile = zipfile.ZipFile(deliveryFilename, "w", zipfile.ZIP_STORED) if args.delivery else None
 	# add lib:addon5e to the zipfile
-	if zfile: 
+	if zfile:
 		zfile.write(filename, os.path.basename(filename))
-	for token in itertools.islice(tokens, args.max_token): 
+	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
 		log.debug(token.verbose())
 		filename = token.zipme()
-		if zfile: 
+		if zfile:
 			zfile.write(filename, os.path.join("tokens", os.path.basename(filename)))
 		sTokens.append(token)
 		if 'dft.png' in token.img.name: log.warning(str(token))
 		cnt += 1
-	log.warning("Done generation %s tokens"%cnt)
-	
+	log.warning("Done generating %s tokens"%cnt)
+
 	log.warning("building campaign file")
 	zone = Zone('Library')
 	zone.build(sTokens + [addon])

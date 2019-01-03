@@ -52,7 +52,7 @@ class Macro(object):
 	def verbose(self): return "\t%s\n" % self
 
 	@property
-	def command(self): return jinja2.Template(self._command).render(macro=self).encode('utf-8')
+	def command(self): return jinja2.Template(self._command).render(macro=self)
 
 	@property
 	def label(self): return self._label

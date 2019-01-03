@@ -34,13 +34,11 @@ class Campaign(object):
 
 	@property
 	def content_xml(self):
-		content = jenv().get_template('cmpgn_content.template').render(cmpgn=self).encode("utf-8")
-		return content or ''
+		return jenv().get_template('cmpgn_content.template').render(cmpgn=self) or u''
 
 	@property
 	def properties_xml(self):
-		content = jenv().get_template('cmpgn_properties.template').render(cmpgn=self)
-		return content or ''
+		return jenv().get_template('cmpgn_properties.template').render(cmpgn=self) or u''
 
 	def zipme(self):
 		"""Zip the Campaing into a cmpgn file."""
@@ -48,14 +46,14 @@ class Campaign(object):
 		if not os.path.exists('build'): os.makedirs('build')
 		with zipfile.ZipFile(os.path.join('build', '%s.cmpgn'%self.name), 'w') as zipme:
 			zipme.writestr('content.xml', self.content_xml.encode('utf-8'))
-			zipme.writestr('properties.xml', self.properties_xml)
+			zipme.writestr('properties.xml', self.properties_xml.encode('utf-8'))
 			md5s = [] # record added assets
 			for name, asset in self.assets:
 				if asset.md5 in md5s: continue # dont zip the same file twice
 				log.debug("adding asset %s: %s" % (name, asset))
 				md5s.append(asset.md5)
 				zipme.writestr('assets/%s' % asset.md5,
-					jenv().get_template('md5.template').render(name=os.path.splitext(os.path.basename(asset.fp))[0], extension='png', md5=asset.md5))
+					jenv().get_template('md5.template').render(name=os.path.splitext(os.path.basename(asset.fp))[0], extension='png', md5=asset.md5).encode('utf-8'))
 				zipme.writestr('assets/%s.png' % asset.md5, asset.bytes)
 
 	def build(self, zones, psets, tables):
