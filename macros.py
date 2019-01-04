@@ -232,7 +232,7 @@ class SpellMacro(Macro):
 		suffix += 'R' if 'reaction' in spell.casting_time else ''
 		suffix += (('c' if suffix=='(' else ',c') if spell.concentration else '')
 		suffix += ')'
-		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token).encode("utf-8"))
+		Macro.__init__(self, token, spell.js, spell.name+(suffix if suffix!='()' else ''), jinja2.Template(spellTemplate).render(spell=spell, token=token))
 		self.action['description'] = '\n'.join(self.action['desc'])
 		self._group = 'Level %s' % spell.level if spell.level >= 1 else 'Cantrips'
 
