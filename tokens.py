@@ -263,7 +263,7 @@ class Token(Dnd5ApiObject):
 	def scAttributes(self):  # spellcasting attribute
 		desc = self.sc['desc'].lower() if self.sc else ''
 		attr = next((attr for attr in ['intelligence', 'charisma', 'wisdom'] if attr in desc), None)
-		match = re.search(r'save dc (\d+)', desc)
+		match = re.search(r'save dc (\d+)', desc, re.IGNORECASE)
 		dc = match and int(match.group(1))
 		match = re.search(r'([+-]\d+) to hit with spell', desc)
 		attack = match and match.group(1)
@@ -547,19 +547,40 @@ class POI(LibToken):
 def loadFromRst(fdata):
 	rst = fdata.read()
 	pref, content = re.split('\n-+\n', rst)
-	sections = re.split('\n~+\n', content)
-	# get rid of the possible description
-	if 'Armor Class' not in sections[0]:
-		sections = sections[1:]
-	stats, actions = sections[:2]
-	stats = '\n'.join((l for l in stats.splitlines() if l))
+	# sections = re.split('\n~+\n', content)
+	# use a lookhead egexp to fetch all sections that looks like
+	# section_name
+	# ~~~~~~~~~~~~
+	# [...]
+	sections = { sec: value for sec, value in re.findall('(?=\n([\w ]+)\n~+\n(.*?)(?:\n~+\n|$))', content, re.DOTALL)}
+	stats = [txt for txt in rst.split('~~~') if 'Armor Class' in txt][0]
+
+	# stats = '\n'.join((l for l in stats.splitlines() if l))
 	size, _type, subtype, align = re.search(r'(\w+) (\w+) ?(\(.*?\))?, (.*)', stats).groups()
 	st, dex, con, intel, wis, cha = [int(e) for e in re.search(r'\| (\d+) \(.?\d+\)\s+'*6, stats).groups()]
 	def getme(what, pattern, default=None):
 		if ('**%s**' % what not in stats and '**%s:**' % what not in stats  ):
 			if default is None: raise RuntimeError("%s not found" % what)
 			return default
-		return re.search('\*\*%s:?\*\* ' % what + pattern, stats).group(1)
+		return re.search('\*\*%s:?\*\* ' % what + pattern, stats, re.MULTILINE | re.DOTALL).group(1)
+	specials = [(field, value) for field, value in re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', stats, re.MULTILINE | re.DOTALL) if field not in [
+		'Armor Class',
+		'Hit Points',
+		'Speed',
+		'Skills',
+		'Saving Throws',
+		'Damage Vulnerabilities',
+		'Damage Resistances',
+		'Damage Immunities',
+		'Condition Immunities',
+		'Senses',
+		'Languages',
+		'Challenge',
+		]]
+	actions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Actions', ''), re.MULTILINE | re.DOTALL)
+	reactions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Reactions', ''), re.MULTILINE | re.DOTALL)
+	lactions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Legendary Actions', ''), re.MULTILINE | re.DOTALL)
+
 	ret = {
 	"index": 0,
 	"name": pref.splitlines()[-1],
@@ -571,44 +592,26 @@ def loadFromRst(fdata):
 	"armor_class":  int(getme ('Armor Class', r'(\d+)')),
 	"hit_points":   int(getme('Hit Points', r'(\d+)')),
 	"hit_dice": getme('Hit Points', '\d+ \((\d+d\d+)'),
-	"speed": getme('Speed', '(.*?)\n'),
+	"speed": getme('Speed', '(.*?)\n\n'),
 	"strength":      st,
 	"dexterity":    dex,
 	"constitution": con,
 	"intelligence": intel,
 	"wisdom":       wis,
 	"charisma":      cha,
-	"skills" : getme('Skills', '(.*?)\n',""),
-	"saves" : "",
-	"damage_vulnerabilities": "",
-	"damage_resistances": "",
-	"damage_immunities": getme('Damage Immunities', '(.*?)\n',""),
-	"condition_immunities": getme('Condition Immunities', '(.*?)\n',""),
-	"senses": getme('Senses', '(.*?)\n',""),
-	"languages": getme('Languages', '(.*?)\n',""),
+	"skills" : getme('Skills', '(.*?)\n\n', u""),
+	"saves" : getme('Saving Throws', '(.*?)\n\n',u""),
+	"damage_vulnerabilities": getme('Damage Vulnerabilities', '(.*?)\n\n',u""),
+	"damage_resistances": getme('Damage Resistances', '(.*?)\n\n',u""),
+	"damage_immunities": getme('Damage Immunities', '(.*?)\n\n',""),
+	"condition_immunities": getme('Condition Immunities', '(.*?)\n\n',""),
+	"senses": getme('Senses', '(.*?)\n\n',""),
+	"languages": getme('Languages', '(.*?)\n\n',""),
 	"challenge_rating": int(getme('Challenge', r'(\d+)')),
-	"special_abilities": [
-	{
-		"name": "Fear Aura",
-		"desc": "Any beast or humanoid that starts its turn within 10 feet of the meenlock must succeed on a DC 11 Wisdom saving throw or be frightened until the start of the creature's next turn"
-	},
-	{
-		"name": "Light Sensitivity",
-		"desc": "While in bright light, the meenlock has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight."
-	},
-	{
-		"name": "Shadow Teleport",
-		"desc": "(Recharge 5-6) As a bonus action, the meenlock can teleport to an unoccupied space within 30 feet of it, provided that both the space it's teleporting from and its destination are in dim light or darkness. The destination need not be within line of sight."
-	}
-	],
-	"actions": [
-	{
-		"name": "Claws",
-		"desc": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target.  Hit: 7 (2d4 + 2) slashing damage, and the target must succeed on a DC 11 Constitution saving throw or be paralyzed for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success."
-	}
-	],
-	"reactions": [],
-	"legendary_actions": []
+	"special_abilities": [{"name": field, "desc": value} for field, value in specials],
+	"actions": [{"name": field, "desc": value} for field, value in actions],
+	"reactions": [{"name": field, "desc": value} for field, value in reactions],
+	"legendary_actions": [{"name": field, "desc": value} for field, value in lactions],
 }
 	return ret
 
