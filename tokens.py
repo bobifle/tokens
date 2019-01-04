@@ -577,9 +577,15 @@ def loadFromRst(fdata):
 		'Languages',
 		'Challenge',
 		]]
-	actions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Actions', ''), re.MULTILINE | re.DOTALL)
-	reactions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Reactions', ''), re.MULTILINE | re.DOTALL)
-	lactions = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get('Legendary Actions', ''), re.MULTILINE | re.DOTALL)
+	items = {}
+	remove_ref = lambda txt: re.sub(r':ref:`(?:\w+?):(.*?)`', r'\1', txt)
+	for iname, section_name in [
+			('actions', 'Actions'),
+			('reactions', 'Reactions'),
+			('lactions', 'Legendary Actions'),
+			]:
+		items[iname] = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get(section_name, ''), re.MULTILINE | re.DOTALL)
+		items[iname] = [(field, remove_ref(value).replace('-', ' ')) for field, value in items[iname]]
 
 	ret = {
 	"index": 0,
@@ -607,11 +613,11 @@ def loadFromRst(fdata):
 	"condition_immunities": getme('Condition Immunities', '(.*?)\n\n',""),
 	"senses": getme('Senses', '(.*?)\n\n',""),
 	"languages": getme('Languages', '(.*?)\n\n',""),
-	"challenge_rating": int(getme('Challenge', r'(\d+)')),
+	"challenge_rating": getme('Challenge', r'(\S+)'),
 	"special_abilities": [{"name": field, "desc": value} for field, value in specials],
-	"actions": [{"name": field, "desc": value} for field, value in actions],
-	"reactions": [{"name": field, "desc": value} for field, value in reactions],
-	"legendary_actions": [{"name": field, "desc": value} for field, value in lactions],
+	"actions": [{"name": field, "desc": value} for field, value in items["actions"]],
+	"reactions": [{"name": field, "desc": value} for field, value in items["reactions"]],
+	"legendary_actions": [{"name": field, "desc": value} for field, value in items["lactions"]],
 }
 	return ret
 
