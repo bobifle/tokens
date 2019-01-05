@@ -29,7 +29,7 @@ ubase = 'http://dnd5eapi.co/api/'
 imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
 if not os.path.exists(imglib):
 	imglib = '../imglib'
-imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo'] ]
+imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo', 'Tome of Beasts'] ]
 
 args = None
 
