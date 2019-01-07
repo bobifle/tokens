@@ -3,7 +3,6 @@
 
 import logging
 import jinja2
-import copy
 import re
 
 log = logging.getLogger(__name__)
@@ -74,7 +73,7 @@ class Macro(object):
 
 	@property
 	def colors(self): return self.fontColor, self.color # tuple (font, bg)
-	
+
 	@colors.setter
 	def colors(self, fbg): self.fontColor, self.color = fbg
 
@@ -85,7 +84,7 @@ class DescrMacro(Macro):
 	"Name", "%s",
 	"Description", "%s")]
 
-[macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc']))
+[macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc'].encode('ascii', 'xmlcharrefreplace')))
 
 	@property
 	def group(self): return self._group or 'Misc'
@@ -122,7 +121,8 @@ class ActionMacro(DescrMacro) :
 	"FlavorText","%s attacks!",
 	"ButtonColor","green",
 	"FontColor","white")]
-[macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, action['desc'], token.name))
+[macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, 
+	action['desc'].encode('ascii', 'xmlcharrefreplace'), token.name))
 		else:
 			DescrMacro.__init__(self, token, action)
 
@@ -182,29 +182,29 @@ class ActionMacro(DescrMacro) :
 	@property
 	def group(self): return self._group or 'Action'
 
-class LairMacro(ActionMacro) : 
+class LairMacro(ActionMacro) :
 	@property
 	def color(self): return self._bcolor or 'orange'
 	@property
 	def fontColor(self): return self._fcolor or 'black'
 	@property
-	def group(self): return self._group or 'Lair (on init 20)' 
+	def group(self): return self._group or 'Lair (on init 20)'
 
-class RegionalEffectMacro(ActionMacro) : 
+class RegionalEffectMacro(ActionMacro) :
 	@property
 	def color(self): return self._bcolor or 'blue'
 	@property
 	def fontColor(self): return self._fcolor or 'white'
 	@property
-	def group(self): return self._group or 'Regional Effects' 
+	def group(self): return self._group or 'Regional Effects'
 
-class LegendaryMacro(ActionMacro) : 
+class LegendaryMacro(ActionMacro) :
 	@property
 	def color(self): return self._bcolor or 'orange'
 	@property
 	def fontColor(self): return self._fcolor or 'black'
 	@property
-	def group(self): return self._group or 'Legendary' 
+	def group(self): return self._group or 'Legendary'
 
 class SpecialMacro(DescrMacro):
 	@property
