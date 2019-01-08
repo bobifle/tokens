@@ -174,6 +174,7 @@ class Token(Dnd5ApiObject):
 		self.x, self.y = 0, 0
 		# for cached properties
 		self._guid = self.sentinel
+		self._macros = []
 
 	def __repr__(self):
 		return 'Token<name=%s,attr=%s,hp=%s(%s),ac=%s,CR%s,img=%s>' % (self.name, [
@@ -233,14 +234,17 @@ class Token(Dnd5ApiObject):
 	@property
 	def portrait(self): return None
 
-	@property
-	def bcon(self): return (self.constitution-10)/2
+	def abonus(self, attribute):
+		return (getattr(self, attribute.lower())-10)/2
 
 	@property
-	def bdex(self): return (self.dexterity-10)/2
+	def bcon(self): return self.abonus('constitution')
 
 	@property
-	def bwis(self): return (self.wisdom-10)/2
+	def bdex(self): return self.abonus('dexterity')
+
+	@property
+	def bwis(self): return self.abonus('wisdom')
 
 	@property
 	def roll_max_hp(self):
@@ -261,16 +265,16 @@ class Token(Dnd5ApiObject):
 	# wisdom, charisma ot intelligence
 	@property
 	def scAttributes(self):  # spellcasting attribute
+		if self.sc is None: return None
 		desc = self.sc['desc'].lower() if self.sc else ''
 		attr = next((attr for attr in ['intelligence', 'charisma', 'wisdom'] if attr in desc), None)
 		match = re.search(r'save dc (\d+)', desc, re.IGNORECASE)
 		dc = match and int(match.group(1))
 		match = re.search(r'([+-]\d+) to hit with spell', desc)
+		# extrack the spell hit bonus, otherwise use the spell castin attribute bonus.
 		attack = match and match.group(1)
-		return (attr, dc, attack) if desc else None
-
-	@property
-	def scDC(self): return
+		if attack is None and attr: attack = self.abonus(attr)
+		return (attr, dc, attack) if desc and attr and dc and attack else None
 
 	@property
 	def actions(self): return self.js.get('actions', [])
@@ -331,12 +335,15 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def macros(self):
+		if self._macros is not self.sentinel: return self._macros
 		# get optinal macros related to the token actions
 		actions = (macros.ActionMacro(self, action) for action in self.actions if action["name"])
 		lairs = (macros.LairMacro(self, action) for action in self.lair_actions if action["name"])
 		reg = (macros.RegionalEffectMacro(self, action) for action in self.regional_effects if action["name"])
 		legends= (macros.LegendaryMacro(self, leg) for leg in self.legends if leg["name"])
 		attributes = self.scAttributes
+		if self.sc and attributes is None:
+			log.warning("Token %s has malformed spellcasting info: %s", self, self.sc)
 		spellCast = []
 		if attributes:
 			attr, dc, attack = attributes
@@ -352,7 +359,8 @@ class Token(Dnd5ApiObject):
 		]
 		if not args.delivery: 
 			commons.append(macros.Macro(self, None, 'Debug', '[macro("Debug@Lib:Addon5e"):0]', **{'group': 'zDebug', 'colors': ('white', 'black')}))
-		return itertools.chain(actions, spellCast, specials, legends, lairs, reg, commons, spells)
+		self._macros = list(itertools.chain(actions, spellCast, specials, legends, lairs, reg, commons, spells))
+		return self._macros
 
 	@property
 	def slots(self): # current spendable slots
@@ -475,7 +483,6 @@ class Token(Dnd5ApiObject):
 class LibToken(Token):
 	def __init__(self, name):
 		Token.__init__(self, {'name': name, 'size': 'large'})
-		self._macros = []
 	def __repr__(self): return 'LibToken<%s>' % self.name
 	@property
 	def type(self): return 'Lib'
@@ -544,25 +551,38 @@ class POI(LibToken):
 			('images', json.dumps({name: asset.md5 for (name, asset) in self.assets.iteritems()}))
 		])
 
+		#  and attr and dc and attack
+
+# attempt to parse a RST file from open5e repo
+# because the rst format is not a data format but a text format, things may
+# go a little bit crazy
 def loadFromRst(fdata):
 	rst = fdata.read()
-	pref, content = re.split('\n-+\n', rst)
+	# the rst file is expected to have a level 1 title, spliting the file between
+	# a header and the content
+	header, content = re.split('\n-+\n', rst) # a line of '------' should be unique in the rst
 	# sections = re.split('\n~+\n', content)
 	# use a lookhead egexp to fetch all sections that looks like
 	# section_name
 	# ~~~~~~~~~~~~
 	# [...]
 	sections = { sec: value for sec, value in re.findall('(?=\n([\w ]+)\n~+\n(.*?)(?:\n~+\n|$))', content, re.DOTALL)}
-	stats = [txt for txt in rst.split('~~~') if 'Armor Class' in txt][0]
 
-	# stats = '\n'.join((l for l in stats.splitlines() if l))
+	# the stats block should be the first section containing the text 'armor class'
+	stats = [txt for txt in rst.split('~~~') if 'Armor Class' in txt][0]
 	size, _type, subtype, align = re.search(r'(\w+) (\w+) ?(\(.*?\))?, (.*)', stats).groups()
 	st, dex, con, intel, wis, cha = [int(e) for e in re.search(r'\| (\d+) \(.?\d+\)\s+'*6, stats).groups()]
+
+	# a helper function to fecth a item in the form **field** value, like **Armor Class** 17
 	def getme(what, pattern, default=None):
 		if ('**%s**' % what not in stats and '**%s:**' % what not in stats  ):
 			if default is None: raise RuntimeError("%s not found" % what)
 			return default
 		return re.search('\*\*%s:?\*\* ' % what + pattern, stats, re.MULTILINE | re.DOTALL).group(1)
+	# a helper function that remove rst references, we need only the raw data
+	remove_ref = lambda txt: re.sub(r':ref:`(?:\w+?):(.*?)`', r'\1', txt)
+
+	# specials, are all fields present in the stats block that is not in the following list:
 	specials = [(field, value) for field, value in re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', stats, re.MULTILINE | re.DOTALL) if field not in [
 		'Armor Class',
 		'Hit Points',
@@ -578,7 +598,7 @@ def loadFromRst(fdata):
 		'Challenge',
 		]]
 	items = {}
-	remove_ref = lambda txt: re.sub(r':ref:`(?:\w+?):(.*?)`', r'\1', txt)
+	# also extract, actions, reactions and legendary actions
 	for iname, section_name in [
 			('actions', 'Actions'),
 			('reactions', 'Reactions'),
@@ -586,10 +606,21 @@ def loadFromRst(fdata):
 			]:
 		items[iname] = re.findall('\*\*(.+?)[.:]?\*\* (.*?)\n\n', sections.get(section_name, ''), re.MULTILINE | re.DOTALL)
 		items[iname] = [(field, remove_ref(value).replace('-', ' ')) for field, value in items[iname]]
+	items['specials'] = [(field, remove_ref(value).replace('-', ' ')) for field, value in specials]
 
-	ret = {
+	# spellcasting is not organized as we expect, it's spread among multiple "at will" "day each" items.
+	# gather everything in one big chunk called "Spellcasting", our Token should be able then to handle it
+	spellCasting = ""
+	for field, value in items['specials']:
+		if 'day each' in field.lower() or 'at will' in field.lower() or 'innate' in field.lower():
+			spellCasting += value + " "
+			# TODO remove the item since its data is no in "SpellCasting"
+	if spellCasting:
+		items["specials"].append(('Spellcasting', spellCasting))
+
+	return {
 	"index": 0,
-	"name": pref.splitlines()[-1],
+	"name": header.splitlines()[-1],
 	"ref": "Tome of Beast",
 	"size": size,
 	"type": _type,
@@ -614,12 +645,11 @@ def loadFromRst(fdata):
 	"senses": getme('Senses', '(.*?)\n\n',""),
 	"languages": getme('Languages', '(.*?)\n\n',""),
 	"challenge_rating": getme('Challenge', r'(\S+)'),
-	"special_abilities": [{"name": field, "desc": value} for field, value in specials],
+	"special_abilities": [{"name": field, "desc": value} for field, value in items['specials']],
 	"actions": [{"name": field, "desc": value} for field, value in items["actions"]],
 	"reactions": [{"name": field, "desc": value} for field, value in items["reactions"]],
 	"legendary_actions": [{"name": field, "desc": value} for field, value in items["lactions"]],
-}
-	return ret
+	}
 
 def main():
 	parser = argparse.ArgumentParser(description='DnD 5e token builder')
