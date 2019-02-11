@@ -687,8 +687,8 @@ def main():
 	localMonsters = []
 	tob = '../open5e/legacy-source-content/monsters/tome-of-beasts/'
 	for f in [
-			# r'../5e-database/5e-SRD-Monsters-volo.json',
-			# r'../5e-database/5e-SRD-Monsters.json',
+			r'../5e-database/5e-SRD-Monsters-volo.json',
+			r'../5e-database/5e-SRD-Monsters.json',
 			]+ [os.path.join(dp, f) for dp, dn, filenames in os.walk(tob) for f in filenames if os.path.splitext(f)[1] == '.rst' and 'index' not in f]:
 		with codecs.open(f, 'r', encoding='utf8') as mfile:
 			if f.endswith('json'):

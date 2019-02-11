@@ -12,7 +12,7 @@
 [h:wDesc=json.get(macro.args,"Description")]
 [h:wSpecialAbility=json.get(macro.args,"SpecialAbility")]
 
-[h:fCritMultiplier=2]
+[h:fCritMultiplier=1]
 [h:fCritRange=20]
 [h:CritDmgDie=(fCritMultiplier*number(substring(wDamageDie,0,indexOf(wDamageDie,"d"))))+substring(wDamageDie,indexOf(wDamageDie,"d"))]
 
