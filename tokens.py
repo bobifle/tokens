@@ -310,7 +310,11 @@ class Token(Dnd5ApiObject):
 	# either a field "saves": "Saving Throws Int +5, Wis +5, Cha +4"
 	# or respective field like "wisdom_save": 5
 	@property
-	def saves(self): return self.js.get('saves', "")
+	def saves(self):
+		saves = self.js.get('saves', "")
+		if saves == "":
+			saves = ", ".join([ '%s %+d'% (attr[:3], self.js["%s_save"%attr.lower()]) for attr in self.attributes if "%s_save" % attr.lower()  in self.js])
+		return saves
 
 	@property
 	def note(self): return ''
