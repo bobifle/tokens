@@ -206,7 +206,8 @@ class Token(Dnd5ApiObject):
 				# pickup the best match, it's a tuple (fpath, ratio)
 				bfpath, bratio = max(itertools.chain(ratios, [('', 0)]), key = lambda i: i[1])
 				log.debug("Best match from the img lib is %s(%s)" % (bfpath, bratio))
-			if bratio > 0.8:
+			# in delivery mode, do not add the tome of beast art, per author request
+			if bratio > 0.8 and (self.js.get("ref", "")!="Tome of Beast" or not args.delivery):
 				self._assets['null'] = Img(bfpath)
 			else:
 				self._assets['null'] = Img(imglib+'/dft.png')
@@ -700,7 +701,6 @@ def main():
 			if f.endswith('rst'):
 				localMonsters += [loadFromRst(mfile)]
 
-
 	mLog = logging.getLogger()
 	mLog.setLevel(logging.DEBUG)
 	mLog.handlers[-1].setLevel(logging.WARNING-(args.verbose or 0)*10)
@@ -835,7 +835,9 @@ def main():
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
-	tokens = itertools.chain([poi], (Token(m) for m in itertools.chain(localMonsters)))
+	# POI is buggy, don't include it right now
+	#tokens = itertools.chain([poi], (Token(m) for m in itertools.chain(localMonsters)))
+	tokens = (Token(m) for m in itertools.chain(localMonsters))
 	# 5e-database is probably a link
 	with open(r'../5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)
