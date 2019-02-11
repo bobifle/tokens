@@ -335,7 +335,7 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def macros(self):
-		if self._macros is not self.sentinel: return self._macros
+		if self._macros: return self._macros
 		# get optinal macros related to the token actions
 		actions = (macros.ActionMacro(self, action) for action in self.actions if action["name"])
 		lairs = (macros.LairMacro(self, action) for action in self.lair_actions if action["name"])
@@ -695,6 +695,7 @@ def main():
 				localMonsters += json.load(mfile)
 			if f.endswith('rst'):
 				localMonsters += [loadFromRst(mfile)]
+
 
 	mLog = logging.getLogger()
 	mLog.setLevel(logging.DEBUG)
