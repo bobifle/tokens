@@ -543,8 +543,10 @@ class POI(LibToken):
 		self._assets['quest'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_t.png')
 		self._assets['magnifier'] = Img(imglib+'/../GUI_Icons_png/transparent/magnifier_t.png')
 		for num in range(1,9):
-			self._assets['%sb'%num] = Img(imglib+'/%sb.png'%num)
-			self._assets['%sg'%num] = Img(imglib+'/%sg.png'%num)
+			fpath = os.path.join(imglib,'%sb.png'%num)
+			if os.path.exists(fpath): self._assets['%sb'%num] = Img(fpath)
+			fpath = os.path.join(imglib,'%sg.png'%num)
+			if os.path.exists(fpath): self._assets['%sg'%num] = Img(fpath)
 		# resize all assets to a reasonable size
 		for asset in self.assets.values():
 			asset.bytes = asset.thumbnail(100,100).getvalue()
@@ -556,10 +558,24 @@ class POI(LibToken):
 			for name, asset in self.assets.iteritems():
 				label = '<img height=40 width=40 src="asset://%s"></img>' % asset.md5
 				self._macros.append(macros.Macro(self, '', label, ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icons' if len(name)>2 else 'IDs', colors=('black', 'white')))
+			self._macros.append(macros.Macro(self, '', 'bigger',  '''
+			[h, if (getSize() == "large"), code : {[setSize("huge")]};{}]
+			[h, if (getSize() == "medium"), code : {[setSize("large")]};{}]
+			[h, if (getSize() == "small"), code : {[setSize("medium")]};{}]
+			[h, if (getSize() == "tiny"), code : {[setSize("small")]};{}]
+			''', group='aSettings',))
+			self._macros.append(macros.Macro(self, '', 'smaller',  '''
+			[h, if (getSize() == "small"), code : {[setSize("tiny")]};{}]
+			[h, if (getSize() == "medium"), code : {[setSize("small")]};{}]
+			[h, if (getSize() == "large"), code : {[setSize("medium")]};{}]
+			[h, if (getSize() == "huge"), code : {[setSize("large")]};{}]
+			''', group='aSettings',))
 			self._macros.append(macros.Macro(self, '', "fromHandout", '''
 [h: gmNotes = ""]
+[h: notes = getNotes()]
+[h: notes = notes +"This is a test"]
 [h: pcNotes = "<!-- uncomment and adapt to your liking -->"]
-[h: pcNotes = pcNotes + "<!-- <FONT COLOR=GREEN SIZE=5><I>Important Note</I></FONT><HR> -->"]
+[h: pcNotes = pcNotes + "<FONT COLOR=BLACK SIZE=4>" + notes + "</FONT><HR>"]
 [h: pid = getTokenPortrait()]
 [h: hid = getTokenHandout()]
 [h, if (pid != ""), code: {
@@ -568,11 +584,11 @@ class POI(LibToken):
 [h, if (hid != ""), code: {
 	[h: gmNotes = gmNotes + "<img src='" + hid + "'/>"]
 };{}]
-[h: setNotes(pcNotes)]
-[h: setGMNotes(gmNotes)]
-[h: setSize("medium")]
+[h: setNotes("")]
+[h: setGMNotes(pcNotes + gmNotes)]
+[h: setSize("large")]
 [h: setLayer("GM")]
-[h: setTokenSnapToGrid(0)]]
+[h: setTokenSnapToGrid(0)]
 ''', group='aSettings'))
 		return self._macros
 	@property
@@ -836,8 +852,8 @@ def main():
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
 	# POI is buggy, don't include it right now
-	#tokens = itertools.chain([poi], (Token(m) for m in itertools.chain(localMonsters)))
-	tokens = (Token(m) for m in itertools.chain(localMonsters))
+	tokens = itertools.chain([poi], (Token(m) for m in itertools.chain(localMonsters)))
+	# tokens = (Token(m) for m in itertools.chain(localMonsters))
 	# 5e-database is probably a link
 	with open(r'../5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)
