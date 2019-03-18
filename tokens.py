@@ -549,7 +549,7 @@ class POI(LibToken):
 			if os.path.exists(fpath): self._assets['%sg'%num] = Img(fpath)
 		# resize all assets to a reasonable size
 		for asset in self.assets.values():
-			asset.bytes = asset.thumbnail(100,100).getvalue()
+			asset.resize(100,100)
 	@property
 	def portrait(self): return None
 	@property
@@ -851,9 +851,7 @@ def main():
 	# fetch the monsters(token) and spells from dnd5Api or get them from the serialized file
 	#tokens = itertools.chain((Token(m) for m in monsters), Token.load('build'))
 	# dont use online api, use the fectched local database instead
-	# POI is buggy, don't include it right now
 	tokens = itertools.chain([poi], (Token(m) for m in itertools.chain(localMonsters)))
-	# tokens = (Token(m) for m in itertools.chain(localMonsters))
 	# 5e-database is probably a link
 	with open(r'../5e-database/5e-SRD-Spells.json', 'r') as mfile:
 		localSpells = json.load(mfile)

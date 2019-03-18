@@ -4,11 +4,8 @@ import jinja2
 import io
 import os
 import hashlib
-import optparse
 import base64
 import uuid
-import csv
-import codecs
 from PIL import Image
 try:
 	import coloredlogs # optional
@@ -77,6 +74,11 @@ class Img(object):
 		self.bytes = byteArray
 		self._md5 = hashlib.md5(self.bytes).hexdigest()
 		self.x, self.y = img.size
+
+	def resize(self, x,y):
+		self.bytes = self.thumbnail(100,100).getvalue()
+		self._md5 = hashlib.md5(self.bytes).hexdigest()
+		self.x, self.y = x,y
 
 	def __repr__(self): return "Img<%s,%s>" % (os.path.basename(self.fp), self.md5)
 
