@@ -25,8 +25,8 @@ from cmpgn import Campaign, PSet
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-#imglib = r'c:/Users/Sulay/OneDrive/RPG/maptool cmpgn/imglib'
-imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
+imglib = r'c:/Users/Sulay/OneDrive/RPG/maptool cmpgn/imglib'
+#imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
 if not os.path.exists(imglib):
 	imglib = '../imglib'
 imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo', 'Tome of Beasts'] ]
