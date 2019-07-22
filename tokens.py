@@ -544,9 +544,13 @@ class POI(LibToken):
 		self._assets['magnifier'] = Img(imglib+'/../GUI_Icons_png/transparent/magnifier_t.png')
 		for num in range(1,9):
 			fpath = os.path.join(imglib,'%sb.png'%num)
-			if os.path.exists(fpath): self._assets['%sb'%num] = Img(fpath)
+			if os.path.exists(fpath): self._assets['rn_b_%02d'%num] = Img(fpath)
 			fpath = os.path.join(imglib,'%sg.png'%num)
-			if os.path.exists(fpath): self._assets['%sg'%num] = Img(fpath)
+			if os.path.exists(fpath): self._assets['rn_g_%02d'%num] = Img(fpath)
+		for num in range(21):
+			fpath = os.path.join(imglib,'Room Numbers/%02d.png'%num)
+			if os.path.exists(fpath): self._assets['rn_%02d'%num] = Img(fpath)
+
 		# resize all assets to a reasonable size
 		for asset in self.assets.values():
 			asset.resize(100,100)
@@ -555,9 +559,10 @@ class POI(LibToken):
 	@property
 	def macros(self):
 		if not self._macros:
-			for name, asset in self.assets.iteritems():
-				label = '<img height=40 width=40 src="asset://%s"></img>' % asset.md5
-				self._macros.append(macros.Macro(self, '', label, ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icons' if len(name)>2 else 'IDs', colors=('black', 'white')))
+			for name,asset in self.assets.iteritems():
+				# add the name as comment so the macro are sorted by the name => increasing number
+				label = '<!--%s--><img height=40 width=40 src="asset://%s"></img>' % (name, asset.md5)
+				self._macros.append(macros.Macro(self, '', label, ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icons' if (not name.startswith('rn_')) else 'IDs', colors=('black', 'white')))
 			self._macros.append(macros.Macro(self, '', 'bigger',  '''
 			[h, if (getSize() == "large"), code : {[setSize("huge")]};{}]
 			[h, if (getSize() == "medium"), code : {[setSize("large")]};{}]
@@ -574,7 +579,7 @@ class POI(LibToken):
 [h: gmNotes = ""]
 [h: notes = getNotes()]
 [h: notes = notes +"This is a test"]
-[h: pcNotes = "<!-- uncomment and adapt to your liking -->"]
+[h: pcNotes = ""]
 [h: pcNotes = pcNotes + "<FONT COLOR=BLACK SIZE=4>" + notes + "</FONT><HR>"]
 [h: pid = getTokenPortrait()]
 [h: hid = getTokenHandout()]
