@@ -542,13 +542,8 @@ class POI(LibToken):
 		self._assets['quest_c'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_complete_t.png')
 		self._assets['quest'] = Img(imglib+'/../GUI_Icons_png/transparent/quest_t.png')
 		self._assets['magnifier'] = Img(imglib+'/../GUI_Icons_png/transparent/magnifier_t.png')
-		for num in range(1,9):
-			fpath = os.path.join(imglib,'%sb.png'%num)
-			if os.path.exists(fpath): self._assets['rn_b_%02d'%num] = Img(fpath)
-			fpath = os.path.join(imglib,'%sg.png'%num)
-			if os.path.exists(fpath): self._assets['rn_g_%02d'%num] = Img(fpath)
 		for num in range(21):
-			fpath = os.path.join(imglib,'Room Numbers/%02d.png'%num)
+			fpath = os.path.join(imglib,'Room Numbers/Numbers/Marker %02d.png'%num)
 			if os.path.exists(fpath): self._assets['rn_%02d'%num] = Img(fpath)
 
 		# resize all assets to a reasonable size
@@ -578,7 +573,7 @@ class POI(LibToken):
 			self._macros.append(macros.Macro(self, '', "fromHandout", '''
 [h: gmNotes = ""]
 [h: notes = getNotes()]
-[h: notes = notes +"This is a test"]
+[h: notes = notes]
 [h: pcNotes = ""]
 [h: pcNotes = pcNotes + "<FONT COLOR=BLACK SIZE=4>" + notes + "</FONT><HR>"]
 [h: pid = getTokenPortrait()]
@@ -591,7 +586,6 @@ class POI(LibToken):
 };{}]
 [h: setNotes("")]
 [h: setGMNotes(pcNotes + gmNotes)]
-[h: setSize("large")]
 [h: setLayer("GM")]
 [h: setTokenSnapToGrid(0)]
 ''', group='aSettings'))
