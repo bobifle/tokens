@@ -62,6 +62,15 @@ class Prop(object):
         </net.rptools.CaseInsensitiveHashMap_-KeyValue>
       </entry>''').render(prop=self)
 
+def all_skills(all_skills={}):
+	if not all_skills:
+		with open(r'../5e-database/5e-SRD-Ability-Scores.json', 'r') as afile:
+			data = json.load(afile)
+		for attribute in data:
+			for skill in attribute['skills']:
+				all_skills[skill['name'].lower()] = attribute['full_name'].lower()
+	return all_skills
+
 class Dnd5ApiObject(object):
 	sfile_name = 'nofile.pickle' # filename used for serialization
 	category = 'unknown'
@@ -293,7 +302,7 @@ class Token(Dnd5ApiObject):
 	def regional_effects(self): return self.js.get('regional_effects', [])
 
 	@property
-	def perception(self): return self.js.get('perception', 10+self.bdex)
+	def passive_perception(self): return 10+self.js.get('perception', self.bwis)
 
 	@property
 	def vulnerabilities(self): return self.js.get('damage_vulnerabilities', "")
@@ -305,7 +314,11 @@ class Token(Dnd5ApiObject):
 	def resistances(self): return self.js.get('damage_immunities', "")
 
 	@property
-	def skills(self): return self.js.get('skills', "")
+	def skills(self):
+		skills = self.js.get('skills', "")
+		if skills=="":
+			skills = ", ".join(["%s +%d" % (sk,self.js[sk]) for sk in all_skills().keys() if self.js.get(sk, None)])
+		return skills
 
 	# saves can be specified in different ways:
 	# either a field "saves": "Saving Throws Int +5, Wis +5, Cha +4"
@@ -438,7 +451,7 @@ class Token(Dnd5ApiObject):
 			('Resistances', self.resistances),
 			('Immunities', self.immunities),
 			('Languages', self.languages),
-			('Perception', self.perception),
+			('passive perception', self.passive_perception),
 			('ImageName', self.img.name),
 			('SpellSlots', self.spell_slots),
 			# do ('bstr', '{floor((getProperty("Strength")-10)/2)}') for all attributes
@@ -497,12 +510,8 @@ class LibToken(Token):
 	def props(self):
 		with open(r'../5e-database/5e-SRD-Ability-Scores.json', 'r') as afile:
 			data = json.load(afile)
-		all_skills = {}
-		for attribute in data:
-			for skill in attribute['skills']:
-				all_skills[skill['name']] = attribute['full_name']
 		return (Prop(name, value) for name, value in [
-			('all_skills', json.dumps(all_skills)),
+			('all_skills', json.dumps(all_skills())),
 			('attributes', json.dumps(self.attributes)),
 			('oTargets', "self"),
 		])
@@ -706,10 +715,12 @@ def main():
 	if not os.path.exists('build'): os.makedirs('build')
 	localMonsters = []
 	tob = '../open5e/legacy-source-content/monsters/tome-of-beasts/'
-	for f in [
-			r'../5e-database/5e-SRD-Monsters-volo.json',
-			r'../5e-database/5e-SRD-Monsters.json',
-			]+ [os.path.join(dp, f) for dp, dn, filenames in os.walk(tob) for f in filenames if os.path.splitext(f)[1] == '.rst' and 'index' not in f]:
+	sources = [
+		r'../5e-database/5e-SRD-Monsters-volo.json',
+		r'../5e-database/5e-SRD-Monsters.json',
+	]
+	sources += [os.path.join(dp, f) for dp, dn, filenames in os.walk(tob) for f in filenames if os.path.splitext(f)[1] == '.rst' and 'index' not in f]
+	for f in sources:
 		with codecs.open(f, 'r', encoding='utf8') as mfile:
 			if f.endswith('json'):
 				localMonsters += json.load(mfile)
@@ -769,7 +780,11 @@ def main():
 [h, if (initb==""), code: {[h: initb=getProperty("bdex")]}]
 [h:macro.return=initb]''', **params))
 	# "Perception +5, Initiative +3" => {"Perception": 5, "Initiative": 3}
-	addon.add(macros.Macro(addon, '', 'getNPCSkills', r'''[h: id = strfind(getProperty("skills"), "((\\w+) \\+(\\d+))")]
+	addon.add(macros.Macro(addon, '', 'getNPCSkills', r'''<!-- Fetch skill bonuses-->
+
+<!-- Depending on the source (SRD, tome of the beast, MM) format of skill data may change-->
+<!-- Method 1: fetch skill entries like "skills: Perception +5, Stealth +4"-->
+[h: id = strfind(getProperty("skills"), "((\\w+) \\+(\\d+))")]
 [h: jskills = "{}"]
 [h: find = getFindCount(id)]
 [h, while (find != 0), code: {
@@ -778,15 +793,15 @@ def main():
 	[h: jskills = json.set(jskills, sname, svalue)]
 	[h: find = find - 1]
 }]
+[h: all_skills= getLibProperty("all_skills", "Lib:Addon5e")]
 <!-- Most of the token don't specify a modifier for all skills-->
 <!-- for all skills missing a modifier, use the default one which is the attribute modifier -->
-[h: all_skills= getLibProperty("all_skills", "Lib:Addon5e")]
 [h, foreach(skill, all_skills), code: {
 	[Attribute = json.get(all_skills, skill)]
 	[att_ = lower(substring(Attribute, 0, 3))]
 	[modifier = json.get(jskills, skill)]
-    [default_mod = getProperty("b"+att_)]
-    [no_mod = json.isEmpty(modifier) ]
+	[default_mod = getProperty("b"+att_)]
+	[no_mod = json.isEmpty(modifier) ]
 	[if (no_mod): jskills = json.set(jskills, skill , default_mod)]
 }]
 [h: macro.return = jskills]''', **params))
