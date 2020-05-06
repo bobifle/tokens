@@ -25,8 +25,7 @@ from cmpgn import Campaign, PSet
 log = logging.getLogger()
 
 ubase = 'http://dnd5eapi.co/api/'
-imglib = r'c:/Users/Sulay/OneDrive/RPG/maptool cmpgn/imglib'
-#imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
+imglib = r'c:/Users/Bobifle/OneDrive/RPG/maptool cmpgn/imglib'
 if not os.path.exists(imglib):
 	imglib = '../imglib'
 imglibs = [imglib] + [ imglib+"/%s"%sub for sub in ['volo', 'Tome of Beasts'] ]
@@ -223,9 +222,6 @@ class Token(Dnd5ApiObject):
 		return self._assets
 
 	@property
-	def type(self): return 'NPC'
-
-	@property
 	def guid(self):
 		if self._guid is self.sentinel:
 			self._guid = guid()
@@ -308,10 +304,11 @@ class Token(Dnd5ApiObject):
 	def vulnerabilities(self): return self.js.get('damage_vulnerabilities', "")
 
 	@property
-	def immunities(self): return self.js.get('damage_immunities', "")
-
-	@property
-	def resistances(self): return self.js.get('damage_immunities', "")
+	def type(self): 
+		foo =  self.js.get('type', 'unknown type')
+		if foo[-1] == 's':
+			print self
+		return foo
 
 	@property
 	def skills(self):
@@ -473,7 +470,13 @@ class Token(Dnd5ApiObject):
 
 	def zipme(self):
 		"""Zip the token into a rptok file."""
-		filename = os.path.join('build', '%s.rptok'%(self.name.replace(":","_")))
+		# directory hierarchy uses the monster type as subfolder
+		root = os.path.join('build', self.type)
+		try:
+			os.makedirs(root)
+		except OSError, e:
+			pass
+		filename = os.path.join(root, '%s.rptok'%(self.name.replace(":","_")))
 		# don't compress to avoid technical issue when sharing files
 		# the gain is very small anyway
 		with zipfile.ZipFile(filename, "w", zipfile.ZIP_STORED) as zipme:
@@ -503,8 +506,6 @@ class LibToken(Token):
 		Token.__init__(self, {'name': name, 'size': 'large'})
 	def __repr__(self): return 'LibToken<%s>' % self.name
 	@property
-	def type(self): return 'Lib'
-	@property
 	def macros(self): return self._macros
 	@property
 	def props(self):
@@ -517,6 +518,8 @@ class LibToken(Token):
 		])
 	@property
 	def spells(self): return []
+	@property
+	def type(self): return ''
 
 	def add(self, macro): self._macros.append(macro)
 	def verbose(self):
@@ -625,6 +628,9 @@ def loadFromRst(fdata):
 	# the stats block should be the first section containing the text 'armor class'
 	stats = [txt for txt in rst.split('~~~') if 'Armor Class' in txt][0]
 	size, _type, subtype, align = re.search(r'(\w+) (\w+) ?(\(.*?\))?, (.*)', stats).groups()
+	# data use plural for creature type, but for consistency with mm and SRD we need singular
+	if _type[-1] == 's':
+		_type = _type[:-1] if _type != 'monstrosities' else 'monstrosity'
 	st, dex, con, intel, wis, cha = [int(e) for e in re.search(r'\| (\d+) \(.?\d+\)\s+'*6, stats).groups()]
 
 	# a helper function to fecth a item in the form **field** value, like **Armor Class** 17
@@ -878,13 +884,13 @@ def main():
 	zfile = zipfile.ZipFile(deliveryFilename, "w", zipfile.ZIP_STORED) if args.delivery else None
 	# add lib:addon5e to the zipfile
 	if zfile:
-		zfile.write(filename, os.path.basename(filename))
+		zfile.write(filename, os.path.relpath(filename, start='build'))
 	for token in itertools.islice(tokens, args.max_token):
 		log.info(token)
 		log.debug(token.verbose())
 		filename = token.zipme()
 		if zfile:
-			zfile.write(filename, os.path.join("tokens", os.path.basename(filename)))
+			zfile.write(filename, os.path.relpath(filename, start='build'))
 		sTokens.append(token)
 		if 'dft.png' in token.img.name: log.warning(str(token))
 		cnt += 1
