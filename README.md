@@ -66,6 +66,10 @@ Trick: The look an feel of text in the Maptool splash screen sucks. I found out 
 
 ## Changelogs
 
+### v0.7
+* fix monsters showing the 'NPC' instead of the monster type (aberration, fey, etc...)
+* tokens are now organized into their own monster tytpe subdir, this should improve user experience when MT is building thumbnails
+
 ### v0.6
 * fix skill bonuses: tokens were always using the ability modifier instead of the stat block bonus (thanks to Smash The Cookies for finding this one)
 * the skill entry in the monster sheet is now fixed
