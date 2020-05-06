@@ -7,7 +7,7 @@ import re
 
 log = logging.getLogger(__name__)
 
-spellTemplate = u'''
+spellTemplate = '''
 [h:data = json.set("{}",
 	"Flavor", "{{token.name}} casts {{spell.name}}",
 	"ParentToken",currentToken(),
@@ -43,7 +43,7 @@ class Macro(object):
 		self._group = None
 		self._bcolor = None # the background button color
 		self._fcolor = None # the font color of the macro button
-		for k,v in kwargs.iteritems(): setattr(self, k, v)
+		for k,v in kwargs.items(): setattr(self, k, v)
 
 	def __str__(self): return '%s<%s,grp=%s>' % (self.__class__.__name__, self.label, self.group)
 	def __repr__(self): return str(self)

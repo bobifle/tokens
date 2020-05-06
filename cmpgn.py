@@ -28,17 +28,17 @@ class Campaign(object):
 	@property
 	def assets(self):
 		for elem in  itertools.chain(self.tokens, self.tables):
-			for k,v in elem.assets.iteritems(): yield k,v
+			for k,v in elem.assets.items(): yield k,v
 
 	def __repr__(self): return 'Cmpgn<%s,%s prop_sets, %s tokens>' % (self.name, len(self.psets), len(list(self.tokens)))
 
 	@property
 	def content_xml(self):
-		return jenv().get_template('cmpgn_content.template').render(cmpgn=self) or u''
+		return jenv().get_template('cmpgn_content.template').render(cmpgn=self) or ''
 
 	@property
 	def properties_xml(self):
-		return jenv().get_template('cmpgn_properties.template').render(cmpgn=self) or u''
+		return jenv().get_template('cmpgn_properties.template').render(cmpgn=self) or ''
 
 	def zipme(self):
 		"""Zip the Campaing into a cmpgn file."""

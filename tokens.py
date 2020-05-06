@@ -52,7 +52,7 @@ class Prop(object):
 		self.value = value
 	def __repr__(self): return '%s<%s,%s>' % (self.__class__.__name__, self.name, self.value)
 	def render(self):
-		return jinja2.Template(u'''      <entry>
+		return jinja2.Template('''      <entry>
         <string>{{prop.name.lower()}}</string>
         <net.rptools.CaseInsensitiveHashMap_-KeyValue>
           <key>{{prop.name}}</key>
@@ -229,7 +229,7 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def content_xml(self):
-		return jenv().get_template('content.template').render(token=self) or u''
+		return jenv().get_template('content.template').render(token=self) or ''
 
 	@property
 	def properties_xml(self):
@@ -254,12 +254,12 @@ class Token(Dnd5ApiObject):
 
 	@property
 	def roll_max_hp(self):
-		dice, value = map(int, self.hit_dice.split('d'))
+		dice, value = list(map(int, self.hit_dice.split('d')))
 		return '%sd%s+%s' % (dice, value, dice*self.bcon)
 
 	@property
 	def max_hit_dice(self):
-		dice, value = map(int, self.hit_dice.split('d'))
+		dice, value = list(map(int, self.hit_dice.split('d')))
 		hd = {'1d12':0, '1d10':0, '1d8':0, '1d6':0}
 		hd.update({'1d%s'%value:dice})
 		return hd
@@ -307,14 +307,14 @@ class Token(Dnd5ApiObject):
 	def type(self): 
 		foo =  self.js.get('type', 'unknown type')
 		if foo[-1] == 's':
-			print self
+			print(self)
 		return foo
 
 	@property
 	def skills(self):
 		skills = self.js.get('skills', "")
 		if skills=="":
-			skills = ", ".join(["%s +%d" % (sk,self.js[sk]) for sk in all_skills().keys() if self.js.get(sk, None)])
+			skills = ", ".join(["%s +%d" % (sk,self.js[sk]) for sk in list(all_skills().keys()) if self.js.get(sk, None)])
 		return skills
 
 	# saves can be specified in different ways:
@@ -405,7 +405,7 @@ class Token(Dnd5ApiObject):
 	@property
 	def spell_slots(self): #max slots available
 		spells={}
-		for i, (k,v) in enumerate(self.slots.iteritems()):
+		for i, (k,v) in enumerate(self.slots.items()):
 			spells["%s"%(i+1)] = v
 		return spells
 
@@ -453,7 +453,7 @@ class Token(Dnd5ApiObject):
 			('SpellSlots', self.spell_slots),
 			# do ('bstr', '{floor((getProperty("Strength")-10)/2)}') for all attributes
 			] + [('b%s' % a[:3].lower(), '{floor((getProperty("%s")-10)/2)}' % a) for a in self.attributes] +
-			[(k, v) for k,v in self.slots.iteritems()]
+			[(k, v) for k,v in self.slots.items()]
 			)
 
 	@property
@@ -474,7 +474,7 @@ class Token(Dnd5ApiObject):
 		root = os.path.join('build', self.type)
 		try:
 			os.makedirs(root)
-		except OSError, e:
+		except OSError as e:
 			pass
 		filename = os.path.join(root, '%s.rptok'%(self.name.replace(":","_")))
 		# don't compress to avoid technical issue when sharing files
@@ -484,7 +484,7 @@ class Token(Dnd5ApiObject):
 			zipme.writestr('properties.xml', self.properties_xml.encode('utf-8'))
 			# default image for the token, right now it's a brown bear
 			# zip the xml file named with the md5 containing the asset properties
-			for name, asset in self.assets.iteritems():
+			for name, asset in self.assets.items():
 				zipme.writestr('assets/%s' % asset.md5, jenv().get_template('md5.template').render(name=name, extension='png', md5=asset.md5).encode("utf-8"))
 				zipme.writestr('assets/%s.png' % asset.md5, asset.bytes)
 			# build thumbnails
@@ -559,14 +559,14 @@ class POI(LibToken):
 			if os.path.exists(fpath): self._assets['rn_%02d'%num] = Img(fpath)
 
 		# resize all assets to a reasonable size
-		for asset in self.assets.values():
+		for asset in list(self.assets.values()):
 			asset.resize(100,100)
 	@property
 	def portrait(self): return None
 	@property
 	def macros(self):
 		if not self._macros:
-			for name,asset in self.assets.iteritems():
+			for name,asset in self.assets.items():
 				# add the name as comment so the macro are sorted by the name => increasing number
 				label = '<!--%s--><img height=40 width=40 src="asset://%s"></img>' % (name, asset.md5)
 				self._macros.append(macros.Macro(self, '', label, ''' [h: setTokenImage("asset://%s")] ''' % asset.md5, group='icons' if (not name.startswith('rn_')) else 'IDs', colors=('black', 'white')))
@@ -605,7 +605,7 @@ class POI(LibToken):
 	@property
 	def props(self):
 		return (Prop(name, value) for name, value in [
-			('images', json.dumps({name: asset.md5 for (name, asset) in self.assets.iteritems()}))
+			('images', json.dumps({name: asset.md5 for (name, asset) in self.assets.items()}))
 		])
 
 		#  and attr and dc and attack
@@ -696,10 +696,10 @@ def loadFromRst(fdata):
 	"intelligence": intel,
 	"wisdom":       wis,
 	"charisma":      cha,
-	"skills" : getme('Skills', '(.*?)\n\n', u""),
-	"saves" : getme('Saving Throws', '(.*?)\n\n',u""),
-	"damage_vulnerabilities": getme('Damage Vulnerabilities', '(.*?)\n\n',u""),
-	"damage_resistances": getme('Damage Resistances', '(.*?)\n\n',u""),
+	"skills" : getme('Skills', '(.*?)\n\n', ""),
+	"saves" : getme('Saving Throws', '(.*?)\n\n',""),
+	"damage_vulnerabilities": getme('Damage Vulnerabilities', '(.*?)\n\n',""),
+	"damage_resistances": getme('Damage Resistances', '(.*?)\n\n',""),
 	"damage_immunities": getme('Damage Immunities', '(.*?)\n\n',""),
 	"condition_immunities": getme('Condition Immunities', '(.*?)\n\n',""),
 	"senses": getme('Senses', '(.*?)\n\n',""),
