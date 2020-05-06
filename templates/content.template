@@ -4,7 +4,7 @@
   </id>
   <beingImpersonated>false</beingImpersonated>
   <imageAssetMap>
-	{% for name, asset in token.assets.iteritems() -%}
+	{% for name, asset in token.assets.items() -%}
     <entry>
       {% if name == "null"%}<null/>{%else%}<string>{{name}}</string>{% endif %}
       <net.rptools.lib.MD5Key>

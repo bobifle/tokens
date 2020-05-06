@@ -32,6 +32,9 @@ spellTemplate = '''
 [macro("CastSpell@Lib:Addon5e"):data]
 '''
 
+def html_escape(s):
+	return s.encode('ascii', 'xmlcharrefreplace').decode('utf-8')
+
 class Macro(object):
 
 	def __init__(self, token, action, label, command, **kwargs):
@@ -84,7 +87,7 @@ class DescrMacro(Macro):
 	"Name", "%s",
 	"Description", "%s")]
 
-[macro("Description@Lib:Addon5e"):data]'''%(action['name'], action['desc'].encode('ascii', 'xmlcharrefreplace')))
+[macro("Description@Lib:Addon5e"):data]'''%(html_escape(action['name']), html_escape(action['desc'])))
 
 	@property
 	def group(self): return self._group or 'Misc'
@@ -93,7 +96,7 @@ class DescrMacro(Macro):
 	def name(self): return self.action.get('name', "")
 
 	@property
-	def desc(self): return self.action.get('desc', "")
+	def desc(self): return html_escape(self.action.get('desc', ""))
 
 	def verbose(self):
 		v = "\t%s\n" % self
@@ -122,7 +125,7 @@ class ActionMacro(DescrMacro) :
 	"ButtonColor","green",
 	"FontColor","white")]
 [macro("NPCAttack@Lib:Addon5e"):jsonWeaponData]'''%(label, self.damage_dice, self.damage_bonus, self.damage_type, self.attack_bonus, 
-	action['desc'].encode('ascii', 'xmlcharrefreplace'), token.name))
+	action['desc'], token.name))
 		else:
 			DescrMacro.__init__(self, token, action)
 

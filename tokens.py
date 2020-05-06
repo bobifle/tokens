@@ -89,7 +89,7 @@ class Dnd5ApiObject(object):
 		# serialize the data if not already done
 		fp = os.path.join(build_dir, cls.sfile_name)
 		if not os.path.exists(fp):
-			with open(fp, 'w') as fpickle:
+			with open(fp, 'wb') as fpickle:
 				pickle.Pickler(fpickle).dump(list(items))
 
 	def __init__(self, js):
@@ -743,7 +743,7 @@ def main():
 
 	# generate the lib addon token
 	addon = LibToken('Lib:Addon5e')
-	fromFile = lambda path: jenv().get_template(path).render().encode("utf-8")
+	fromFile = lambda path: jenv().get_template(path).render()
 	params = {'group': 'zLib', 'prefix': 'a5e'}
 	addon.add(macros.Macro(addon, '', 'onCampaignLoad', '''
 [h: defineFunction( "%(prefix)s.jget", "jget@this" )]
